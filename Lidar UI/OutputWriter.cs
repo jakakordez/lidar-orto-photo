@@ -10,8 +10,8 @@ namespace Lidar_UI
 {
     class OutputWriter : TextWriter
     {
-        ListBox listBox;
-        public OutputWriter(ListBox listBox)
+        TextBox listBox;
+        public OutputWriter(TextBox listBox)
         {
             this.listBox = listBox;
         }
@@ -20,11 +20,21 @@ namespace Lidar_UI
 
         public override void Write(string value)
         {
-            base.Write(value);
             listBox.Dispatcher.Invoke(() =>
             {
-                listBox.Items.Add(value);
+                listBox.Text += value;
+                listBox.ScrollToEnd();
             });
+        }
+
+        public override void Write(char[] buffer)
+        {
+            Write(buffer, 0, buffer.Length);
+        }
+
+        public override void Write(char[] buffer, int index, int count)
+        {
+            Write(new string(buffer, index, count));
         }
     }
 }

@@ -26,6 +26,7 @@ namespace Lidar_UI
     public partial class MainWindow : Window
     {
         private readonly int[] SlovenianMapBounds = { 374, 30, 624, 194 }; //minx,miny,maxx,maxy in thousand, manualy set based on ARSO website
+        int[] bounds = new int[4];
         Thread worker;
 
         public MainWindow()
@@ -34,6 +35,8 @@ namespace Lidar_UI
             txtPath.Text = Directory.GetParent(Directory.GetCurrentDirectory()).Parent?.FullName + "\\resources\\";
             mapView.Load(SlovenianMapBounds);
             Console.SetOut(new OutputWriter(lstOutput));
+            SlovenianMapBounds.CopyTo(bounds, 0);
+            UpdateValues();
         }
 
         private void btnStart_Click(object sender, RoutedEventArgs e)
@@ -44,35 +47,56 @@ namespace Lidar_UI
                 {
                     var param = (Tuple<bool, string>)parameter;
                     int index = 0;
-                    for (var x = SlovenianMapBounds[0]; x <= SlovenianMapBounds[2]; x++)
+                    try
                     {
-                        for (var y = SlovenianMapBounds[1]; y <= SlovenianMapBounds[3]; y++)
+                        Console.WriteLine("[{0:hh:mm:ss}] Started with bounds: X: {1} - {3}, Y: {2} - {4}", DateTime.Now, bounds[0], bounds[1], bounds[2], bounds[3]);
+                        for (var x = bounds[0]; x <= bounds[2]; x++)
                         {
-                            var url = Loader.GetArsoUrl(x + "_" + y);
-                            if (url == null) mapView.FillBlock(x, y, Colors.Red);
-                            else {
-                                Console.WriteLine("[{0:hh:mm:ss}] Found URL: {1}", DateTime.Now, url);
-                                mapView.FillBlock(x, y, Colors.Yellow);
-                                Loader l = new Loader(index, url, param.Item2, param.Item1);
-                                l.Start();
-                                index++;
-                                mapView.FillBlock(x, y, Colors.Green);
-                                Console.WriteLine("[{0:hh:mm:ss}] Number of blocs proccesed:  {1}\n", DateTime.Now, index);
+                            for (var y = bounds[1]; y <= bounds[3]; y++)
+                            {
+                                var url = Loader.GetArsoUrl(x + "_" + y);
+                                if (url == null) mapView.FillBlock(x, y, Colors.Red);
+                                else
+                                {
+                                    Console.WriteLine("[{0:hh:mm:ss}] Found URL: {1}", DateTime.Now, url);
+                                    mapView.FillBlock(x, y, Colors.Yellow);
+                                    Loader l = new Loader(index, url, param.Item2, param.Item1);
+                                    l.Start();
+                                    index++;
+                                    mapView.FillBlock(x, y, Colors.Green);
+                                    Console.WriteLine("[{0:hh:mm:ss}] Number of blocs proccesed:  {1}\n", DateTime.Now, index);
+                                }
                             }
                         }
                     }
+                    catch (Exception exc)
+                    {
+                        Console.WriteLine("Exception");
+                        Console.WriteLine(exc.Message);
+                        Console.WriteLine(exc.StackTrace);
+                    }
+                    btnStart_Click(this, null);
+
                 }));
                 worker.Start(new Tuple<bool, string>(chkNormals.IsChecked??false, txtPath.Text));
                 btnStart.Content = "Stop";
                 chkNormals.IsEnabled = false;
                 txtPath.IsEnabled = false;
+                txtLeft.IsEnabled = false;
+                txtBottom.IsEnabled = false;
+                txtRight.IsEnabled = false;
+                txtTop.IsEnabled = false;
             }
             else
             {
-                worker.Abort();
+                if(worker.IsAlive) worker.Abort();
                 worker = null;
                 chkNormals.IsEnabled = true;
                 txtPath.IsEnabled = true;
+                txtLeft.IsEnabled = true;
+                txtBottom.IsEnabled = true;
+                txtRight.IsEnabled = true;
+                txtTop.IsEnabled = true;
                 btnStart.Content = "Start";
             }
         }
@@ -84,6 +108,37 @@ namespace Lidar_UI
             if(dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 txtPath.Text = dialog.SelectedPath;
+            }
+        }
+
+        void UpdateValues()
+        {
+            txtLeft.Text = bounds[0].ToString();
+            txtBottom.Text = bounds[1].ToString();
+            txtRight.Text = bounds[2].ToString();
+            txtTop.Text = bounds[3].ToString();
+        }
+
+        private void TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ReadBound(0, txtLeft);
+            ReadBound(1, txtBottom);
+            ReadBound(2, txtRight);
+            ReadBound(3, txtTop);
+
+            mapView.SetArea(bounds);
+        }
+
+        void ReadBound(int index, System.Windows.Controls.TextBox txt)
+        {
+            try
+            {
+                bounds[index] = Convert.ToInt32(txt.Text);
+                txt.Background = Brushes.White;
+            }
+            catch
+            {
+                txt.Background = Brushes.Red;
             }
         }
     }

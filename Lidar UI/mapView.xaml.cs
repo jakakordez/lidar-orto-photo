@@ -22,9 +22,9 @@ namespace Lidar_UI
     {
         byte[] pixels1d;
         WriteableBitmap wbitmap;
-        int width => bounds[2]-bounds[0];
-        int height => bounds[3]-bounds[1];
-        int[] bounds;
+        int width => mapBounds[2]-mapBounds[0];
+        int height => mapBounds[3]-mapBounds[1];
+        int[] mapBounds;
         public mapView()
         {
             InitializeComponent();
@@ -32,16 +32,35 @@ namespace Lidar_UI
 
         public void Load(int[] bounds)
         {
-            this.bounds = bounds;
+            this.mapBounds = bounds;
             wbitmap = new WriteableBitmap(width, height, 96, 96, PixelFormats.Rgb24, null);
             pixels1d = new byte[height * width * 3];
             imgMap.Source = wbitmap;
         }
 
+        public void SetArea(int[] bounds)
+        {
+            bounds[0] = Math.Max(bounds[0], mapBounds[0]);
+            bounds[1] = Math.Max(bounds[1], mapBounds[1]);
+            bounds[2] = Math.Min(bounds[2], mapBounds[2]);
+            bounds[3] = Math.Min(bounds[3], mapBounds[3]);
+
+            pixels1d = new byte[height * width * 3];
+            imgMap.Source = wbitmap;
+            for (int x = bounds[0]; x < bounds[2]; x++)
+            {
+                for (int y = bounds[1]; y < bounds[3]; y++)
+                {
+                    FillBlock(x, y, Colors.DarkBlue, false);
+                }
+            }
+            Update();
+        }
+
         public void FillBlock(int x, int y, Color c, bool update = true)
         {
-            x = x - bounds[0];
-            y = y - bounds[1];
+            x = x - mapBounds[0];
+            y = y - mapBounds[1];
 
             y = height - y - 1;
             pixels1d[y * width * 3 + x * 3 + 0] = c.R;

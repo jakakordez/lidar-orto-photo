@@ -10,7 +10,7 @@
         <Image x:Name="imgMap" 
                Stretch="Uniform" 
                RenderOptions.BitmapScalingMode="NearestNeighbor"
-                RenderOptions.EdgeMode="Aliased" 
+                RenderOptions.EdgeMode="Aliased"
                />
     </Grid>
 </UserControl>

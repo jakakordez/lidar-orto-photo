@@ -10,6 +10,7 @@ using System.Runtime.Remoting.Messaging;
 using System.Threading;
 using System.Web.UI.DataVisualization.Charting;
 using Accord.Collections;
+//using Accord.Collections;
 using Accord.IO;
 using Accord.Math;
 using Accord.Math.Decompositions;
@@ -17,6 +18,7 @@ using laszip.net;
 using RestSharp;
 using RestSharp.Deserializers;
 using Point = System.Windows.Point;
+using KdTree;
 
 namespace lidar_orto_photo
 {
@@ -59,20 +61,26 @@ namespace lidar_orto_photo
 
             lazReader.laszip_open_reader(filePath, ref compressed);
             var numberOfPoints = lazReader.header.number_of_point_records;
-            var coordArray = new double[3];
-            var kdTree = new KDTree(3);
+            
+            //var kdTree = new KDTree(3);
+            var kdTree = new KdTree<double,object>(3, new KdTree.Math.DoubleMath(), AddDuplicateBehavior.Update);
+            
             if (IncludeNormals)
             {
                 Console.Write("[{0:hh:mm:ss}] Reading LAZ and building KD tree...", DateTime.Now);
                 for (var pointIndex = 0; pointIndex < numberOfPoints; pointIndex++)
                 {
+                    var coordArray = new double[3];
                     lazReader.laszip_read_point();
                     lazReader.laszip_get_coordinates(coordArray);
-
-                    kdTree.Add(coordArray);
+                    //Thread.Sleep(1);
+                    //kdTree.Add(coordArray);
+                    kdTree.Add(coordArray, null);
+                    //Console.WriteLine("Point {0} {1} {2}", coordArray[0], coordArray[1], coordArray[2]);
                 }
                 Console.WriteLine("[DONE] ");
             }
+            kdTree.Balance();
             var img = GetOrthophotoImg();
 
             Console.Write("[{0:hh:mm:ss}] Reading and writing LAZ...", DateTime.Now);
@@ -85,6 +93,7 @@ namespace lidar_orto_photo
 
             for (var pointIndex = 0; pointIndex < numberOfPoints; pointIndex++)
             {
+                var coordArray = new double[3];
                 lazReader.laszip_read_point();
                 lazReader.laszip_get_coordinates(coordArray);
                 lazWriter.point = lazReader.point;
@@ -103,8 +112,14 @@ namespace lidar_orto_photo
 
                 if (IncludeNormals)
                 {
-                    var kNeighbours = kdTree.ApproximateNearest(coordArray, 20, 1000);
-                    var normal = GetNormal(coordArray, kNeighbours);
+                    //var kNeighbours = kdTree.ApproximateNearest(coordArray, 20, 1000);
+                    var kNeighbours = kdTree.GetNearestNeighbours(coordArray, 20);
+                    var collection = new KDTreeNodeCollection<KDTreeNode>(20);
+                    for (int k = 0; k < 20; k++)
+                    {
+                        collection.Add(new KDTreeNode {Position = kNeighbours[k].Point}, 0);
+                    }
+                    var normal = GetNormal(coordArray, collection);
 
                     var xt = (float)normal[0];//xt in LAS is float
                     var yt = (float)normal[1];

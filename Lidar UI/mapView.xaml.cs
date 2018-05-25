@@ -47,13 +47,20 @@ namespace Lidar_UI
 
             pixels1d = new byte[height * width * 3];
             imgMap.Source = wbitmap;
-            for (int x = bounds[0]; x < bounds[2]; x++)
+            try
             {
-                for (int y = bounds[1]; y < bounds[3]; y++)
+                for (int x = bounds[0]; x <= bounds[2]; x++)
                 {
-                    FillBlock(x, y, Colors.DarkBlue, false);
+                    for (int y = bounds[1]; y <= bounds[3]; y++)
+                    {
+                        FillBlock(x, y, Colors.DarkBlue, false);
+                    }
                 }
             }
+            catch
+            {
+            }
+
             Update();
         }
 

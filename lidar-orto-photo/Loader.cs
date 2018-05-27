@@ -173,6 +173,8 @@ namespace lidar_orto_photo
             Console.WriteLine("[DONE]");
         }
 
+        
+
         public void Start()
         {
             DownloadLaz(lidarUrl);
@@ -226,7 +228,7 @@ namespace lidar_orto_photo
         }
 
         //download and return Image created based on bounds -> _bottomLeftX, _bottomLeftY
-        private Bitmap GetOrthophotoImg()
+        public Bitmap GetOrthophotoImg()
         {
             double minX = _bottomLeftX;
             double minY = _bottomLeftY;

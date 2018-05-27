@@ -151,8 +151,10 @@
     <ClInclude Include="dsyevj3.h" />
     <ClInclude Include="dsyevq3.h" />
     <ClInclude Include="dsytrd3.h" />
+    <ClInclude Include="KDTree.h" />
     <ClInclude Include="kdtree2.hpp" />
     <ClInclude Include="laszip_api.h" />
+    <ClInclude Include="Point3d.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
@@ -162,8 +164,10 @@
     <ClCompile Include="dsyevj3.cpp" />
     <ClCompile Include="dsyevq3.cpp" />
     <ClCompile Include="dsytrd3.cpp" />
+    <ClCompile Include="KDTree.cpp" />
     <ClCompile Include="kdtree2.cpp" />
     <ClCompile Include="NormalCalculator.cpp" />
+    <ClCompile Include="Point3d.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

@@ -32,7 +32,8 @@ namespace lidar_orto_photo
 	        Console.WriteLine("[{0:hh:mm:ss}] Start program. ", DateTime.Now);        
 	        Console.WriteLine("[{0:hh:mm:ss}] Searching for valid ARSO Urls...", DateTime.Now);
 
-	        int index = 0;
+
+            int index = 0;
 	        for (var x = SlovenianMapBounds[0]; x <= SlovenianMapBounds[2]; x++)
 	        {
 		        for (var y = SlovenianMapBounds[1]; y <= SlovenianMapBounds[3]; y++)

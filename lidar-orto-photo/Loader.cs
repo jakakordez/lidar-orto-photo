@@ -19,6 +19,7 @@ using RestSharp;
 using RestSharp.Deserializers;
 using Point = System.Windows.Point;
 using KdTree;
+using System.Threading.Tasks;
 
 namespace lidar_orto_photo
 {
@@ -32,6 +33,8 @@ namespace lidar_orto_photo
         private int _bottomLeftY;
         private int id;
         private string lidarUrl;
+
+        public Task WorkerTask;
 
         //param example: "gis.arso.gov.si/lidar/gkot/laz/b_35/D48GK/GK_462_104.laz"
         public Loader(int id, string lidarUrl, string resourceDirectory, bool includeNormals)
@@ -59,17 +62,16 @@ namespace lidar_orto_photo
         {
             var lazReader = new laszip_dll();
             var compressed = true;
-            var filePath = ResourceDirectoryPath + "laz13.laz";
+            var filePath = ResourceDirectoryPath + id+"-laz13.laz";
 
             lazReader.laszip_open_reader(filePath, ref compressed);
             var numberOfPoints = lazReader.header.number_of_point_records;
-            numberOfPoints = 100;
             //var kdTree = new KDTree(3);
             var kdTree = new KdTree<double,object>(3, new KdTree.Math.DoubleMath(), AddDuplicateBehavior.Update);
             
             if (IncludeNormals)
             {
-                Console.Write("[{0:hh:mm:ss}] Reading LAZ and building KD tree...", DateTime.Now);
+                Console.WriteLine("[#{0} {1:hh:mm:ss}] Reading LAZ and building KD tree...", id, DateTime.Now);
                 for (var pointIndex = 0; pointIndex < numberOfPoints; pointIndex++)
                 {
                     var coordArray = new double[3];
@@ -80,16 +82,16 @@ namespace lidar_orto_photo
                     kdTree.Add(coordArray, null);
                     //Console.WriteLine("Point {0} {1} {2}", coordArray[0], coordArray[1], coordArray[2]);
                 }
-                Console.WriteLine("[DONE] ");
+                //Console.WriteLine("[DONE] ");
 
-                Console.Write("[{0:hh:mm:ss}] Balancing KD tree...", DateTime.Now);
+                Console.WriteLine("[#{0} {1:hh:mm:ss}] Balancing KD tree...", id, DateTime.Now);
                 kdTree.Balance();
-                Console.WriteLine("[DONE] ");
+                //Console.WriteLine("[DONE] ");
             }
             
             var img = GetOrthophotoImg();
 
-            Console.WriteLine("[{0:hh:mm:ss}] Reading and writing LAZ...", DateTime.Now);
+            Console.WriteLine("[#{0} {1:hh:mm:ss}] Reading and writing LAZ...", id, DateTime.Now);
             lazReader.laszip_seek_point(0L);//read from the beginning again
             lazReader.laszip_open_reader(filePath, ref compressed);
 
@@ -108,8 +110,8 @@ namespace lidar_orto_photo
                     double totalHours = elaspedHours / finishedShare;
                     double remainingHours = totalHours - elaspedHours;
                     Console.WriteLine(
-                        "[{0:hh:mm:ss}] Finished " + (pointIndex / 1000) + "k / " + (numberOfPoints / 1000) + "k | "+Math.Round(remainingHours, 2)+" hours remaining",
-                        DateTime.Now);
+                        "[#{0} {1:hh:mm:ss}] Finished " + (pointIndex / 1000) + "k / " + (numberOfPoints / 1000) + "k | "+Math.Round(remainingHours, 2)+" hours remaining",
+                        id, DateTime.Now);
                 }
             
                 var coordArray = new double[3];
@@ -173,14 +175,14 @@ namespace lidar_orto_photo
             lazReader.laszip_close_reader();
             lazWriter.laszip_close_writer();
 
-            Console.WriteLine("[DONE]");
+            //Console.WriteLine("[DONE]");
         }//end readwrite function
 
         //simple visualtisation with lasview.exe
         //param example: "laz13.laz"
         private void RunLasview(string fileName)
         {
-            Console.Write("[{0:hh:mm:ss}] Opening lasview.exe...", DateTime.Now);
+            Console.Write("[#{0} {1:hh:mm:ss}] Opening lasview.exe...", id, DateTime.Now);
             var start = new ProcessStartInfo
             {
                 Arguments = "-i \"" + ResourceDirectoryPath + fileName + "\"",
@@ -196,11 +198,11 @@ namespace lidar_orto_photo
         //trasnform from LAS 1.2 to 1.3, save new file to folder
         private void RunLas2Las()
         {
-            Console.Write("[{0:hh:mm:ss}] Converting to LAS 1.3 ...", DateTime.Now);
+            Console.WriteLine("[#{0} {1:hh:mm:ss}] Converting to LAS 1.3 ...", id, DateTime.Now);
             var start = new ProcessStartInfo
             {
                 Arguments = "-i \"" + ResourceDirectoryPath +
-                          "laz12.laz\" -set_point_type 5 -set_version 1.3 -o \"" + ResourceDirectoryPath + "laz13.laz\"", // point type 3
+                          id+"-laz12.laz\" -set_point_type 5 -set_version 1.3 -o \"" + ResourceDirectoryPath + id+"-laz13.laz\"", // point type 3
                 FileName = ResourceDirectoryPath + "las2las",
                 WindowStyle = ProcessWindowStyle.Hidden,
                 CreateNoWindow = false
@@ -208,16 +210,19 @@ namespace lidar_orto_photo
 
             var process = Process.Start(start);
             process?.WaitForExit();
-            Console.WriteLine("[DONE]");
+            //Console.WriteLine("[DONE]");
         }
 
         public void Start()
         {
-            DownloadLaz(lidarUrl);
-            SetParameters(lidarUrl);
-            RunLas2Las();
-            ReadWriteLaz();
-            //	        RunLasview(fileName + ".laz");
+            WorkerTask = Task.Run(() =>
+            {
+                DownloadLaz(lidarUrl);
+                SetParameters(lidarUrl);
+                RunLas2Las();
+                ReadWriteLaz();
+                //RunLasview(fileName + ".laz");
+            });
         }
 
         //nearest neighbour interpolation
@@ -271,7 +276,7 @@ namespace lidar_orto_photo
             double maxX = minX + 999.999999999;
             double maxY = minY + 999.999999999;
 
-            Console.Write("[{0:hh:mm:ss}] Downloading image...", DateTime.Now);
+            Console.WriteLine("[#{0} {1:hh:mm:ss}] Downloading image...", id, DateTime.Now);
             var request = WebRequest.Create("http://gis.arso.gov.si/arcgis/rest/services/DOF_2016/MapServer/export" +
                                                $"?bbox={minX}%2C{minY}%2C{maxX}%2C{maxY}&bboxSR=&layers=&layerDefs=" +
                                                $"&size={OrtoPhotoImgSize}%2C{OrtoPhotoImgSize}&imageSR=&format=png" +
@@ -279,7 +284,7 @@ namespace lidar_orto_photo
                                                "&dynamicLayers=&gdbVersion=&mapScale=&f=image");
             WebResponse response = request.GetResponse();
             Stream responseStream = response.GetResponseStream();
-            Console.WriteLine("[DONE]");
+            //Console.WriteLine("[DONE]");
             return new Bitmap(responseStream ?? throw new Exception());
         }
 
@@ -288,10 +293,10 @@ namespace lidar_orto_photo
         private void DownloadLaz(string lidarUrl)
         {
             Uri uri = new Uri(lidarUrl);
-            Console.Write("[{0:hh:mm:ss}] Downloading Laz from ARSO...", DateTime.Now);
+            Console.WriteLine("[#{0} {1:hh:mm:ss}] Downloading Laz from ARSO...", id, DateTime.Now);
             WebClient client = new WebClient();
-            client.DownloadFile(uri, ResourceDirectoryPath + "laz12.laz");
-            Console.WriteLine("[DONE]");
+            client.DownloadFile(uri, ResourceDirectoryPath + id+"-laz12.laz");
+            //Console.WriteLine("[DONE]");
         }
 
         //returns normal of the point, based on the neighbours in KDtree

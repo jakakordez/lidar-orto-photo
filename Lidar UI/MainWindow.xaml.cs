@@ -39,12 +39,17 @@ namespace Lidar_UI
             UpdateValues();
         }
 
+        
+
         private void btnStart_Click(object sender, RoutedEventArgs e)
         {
             if (worker == null)
             {
-                worker = new Thread(new ParameterizedThreadStart((object parameter) =>
+                worker = new Thread(new ParameterizedThreadStart(async (object parameter) =>
                 {
+                    const int Workers = 4;
+                    List<Loader> loaders = new List<Loader>();
+
                     var param = (Tuple<bool, string>)parameter;
                     int index = 0;
                     try
@@ -58,13 +63,19 @@ namespace Lidar_UI
                                 if (url == null) mapView.FillBlock(x, y, Colors.Red);
                                 else
                                 {
-                                    Console.WriteLine("[{0:hh:mm:ss}] Found URL: {1}", DateTime.Now, url);
                                     mapView.FillBlock(x, y, Colors.Yellow);
+                                    if(loaders.Count == Workers)
+                                    {
+                                        Task.WaitAny(loaders.Select(loader => loader.WorkerTask).ToArray());
+                                        loaders = loaders.Where(loader => !loader.WorkerTask.IsCompleted).ToList();
+                                        Console.WriteLine("[{0:hh:mm:ss}] Number of blocs proccesed:  {1}\n", DateTime.Now, index);
+                                    }
+                                    Console.WriteLine("[{0:hh:mm:ss}] Found URL: {1}", DateTime.Now, url);
                                     Loader l = new Loader(index, url, param.Item2, param.Item1);
                                     l.Start();
+                                    loaders.Add(l);
                                     index++;
-                                    mapView.FillBlock(x, y, Colors.Green);
-                                    Console.WriteLine("[{0:hh:mm:ss}] Number of blocs proccesed:  {1}\n", DateTime.Now, index);
+                                    //mapView.FillBlock(x, y, Colors.Green);
                                 }
                             }
                         }
@@ -75,6 +86,8 @@ namespace Lidar_UI
                         Console.WriteLine(exc.Message);
                         Console.WriteLine(exc.StackTrace);
                     }
+                    Console.WriteLine("[{0:hh:mm:ss}] Finished", DateTime.Now);
+                    Task.WaitAll(loaders.Select(loader => loader.WorkerTask).ToArray());
                     btnStart_Click(this, null);
 
                 }));

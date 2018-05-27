@@ -10,6 +10,7 @@ using System.Runtime.Remoting.Messaging;
 using System.Threading;
 using System.Web.UI.DataVisualization.Charting;
 using Accord.Collections;
+//using Accord.Collections;
 using Accord.IO;
 using Accord.Math;
 using Accord.Math.Decompositions;
@@ -17,6 +18,7 @@ using laszip.net;
 using RestSharp;
 using RestSharp.Deserializers;
 using Point = System.Windows.Point;
+using KdTree;
 
 namespace lidar_orto_photo
 {
@@ -50,6 +52,8 @@ namespace lidar_orto_photo
             _bottomLeftY = int.Parse(fileName.Split('_')[2]) * 1000;
         }
 
+        private Stopwatch stw;
+
         //reads LAZ, builds KD tree, reads LAZ again and sets color & normal and writes
         private void ReadWriteLaz()
         {
@@ -59,23 +63,33 @@ namespace lidar_orto_photo
 
             lazReader.laszip_open_reader(filePath, ref compressed);
             var numberOfPoints = lazReader.header.number_of_point_records;
-            var coordArray = new double[3];
-            var kdTree = new KDTree(3);
+            numberOfPoints = 100;
+            //var kdTree = new KDTree(3);
+            var kdTree = new KdTree<double,object>(3, new KdTree.Math.DoubleMath(), AddDuplicateBehavior.Update);
+            
             if (IncludeNormals)
             {
                 Console.Write("[{0:hh:mm:ss}] Reading LAZ and building KD tree...", DateTime.Now);
                 for (var pointIndex = 0; pointIndex < numberOfPoints; pointIndex++)
                 {
+                    var coordArray = new double[3];
                     lazReader.laszip_read_point();
                     lazReader.laszip_get_coordinates(coordArray);
-
-                    kdTree.Add(coordArray);
+                    //Thread.Sleep(1);
+                    //kdTree.Add(coordArray);
+                    kdTree.Add(coordArray, null);
+                    //Console.WriteLine("Point {0} {1} {2}", coordArray[0], coordArray[1], coordArray[2]);
                 }
                 Console.WriteLine("[DONE] ");
+
+                Console.Write("[{0:hh:mm:ss}] Balancing KD tree...", DateTime.Now);
+                kdTree.Balance();
+                Console.WriteLine("[DONE] ");
             }
+            
             var img = GetOrthophotoImg();
 
-            Console.Write("[{0:hh:mm:ss}] Reading and writing LAZ...", DateTime.Now);
+            Console.WriteLine("[{0:hh:mm:ss}] Reading and writing LAZ...", DateTime.Now);
             lazReader.laszip_seek_point(0L);//read from the beginning again
             lazReader.laszip_open_reader(filePath, ref compressed);
 
@@ -83,8 +97,22 @@ namespace lidar_orto_photo
             lazWriter.header = lazReader.header;
             lazWriter.laszip_open_writer(ResourceDirectoryPath + "SloveniaLidarRGB" + id + ".laz", true);
 
+            stw = new Stopwatch();
+            stw.Restart();
             for (var pointIndex = 0; pointIndex < numberOfPoints; pointIndex++)
             {
+                if (pointIndex % 100000 == 0)
+                {
+                    double elaspedHours = stw.Elapsed.TotalHours;
+                    double finishedShare = (double)pointIndex/numberOfPoints;
+                    double totalHours = elaspedHours / finishedShare;
+                    double remainingHours = totalHours - elaspedHours;
+                    Console.WriteLine(
+                        "[{0:hh:mm:ss}] Finished " + (pointIndex / 1000) + "k / " + (numberOfPoints / 1000) + "k | "+Math.Round(remainingHours, 2)+" hours remaining",
+                        DateTime.Now);
+                }
+            
+                var coordArray = new double[3];
                 lazReader.laszip_read_point();
                 lazReader.laszip_get_coordinates(coordArray);
                 lazWriter.point = lazReader.point;
@@ -103,13 +131,23 @@ namespace lidar_orto_photo
 
                 if (IncludeNormals)
                 {
-                    var kNeighbours = kdTree.ApproximateNearest(coordArray, 20, 1000);
-                    var normal = GetNormal(coordArray, kNeighbours);
+                    //var kNeighbours = kdTree.ApproximateNearest(coordArray, 20, 1000);
+                    var kNeighbours = kdTree.GetNearestNeighbours(coordArray, 20);
+                    var collection = new KDTreeNodeCollection<KDTreeNode>(20);
+                    for (int k = 0; k < 20; k++)
+                    {
+                        collection.Add(new KDTreeNode {Position = kNeighbours[k].Point}, 0);
+                    }
+                    var normal = GetNormal(coordArray, collection);
 
-                    var xt = (float)normal[0];//xt in LAS is float
+                    lazReader.point.rgb[0] |= (byte)((normal[0] + 1.0) * 128.0);
+                    lazReader.point.rgb[1] |= (byte)((normal[1] + 1.0) * 128.0);
+                    lazReader.point.rgb[2] |= (byte)((normal[2] + 1.0) * 128.0);
+
+                    /*var xt = (float)normal[0];//xt in LAS is float
                     var yt = (float)normal[1];
                     var zt = (float)normal[2];
-
+                    
                     var xtBytes = BitConverter.GetBytes(xt);
                     var ytBytes = BitConverter.GetBytes(yt);
                     var ztBytes = BitConverter.GetBytes(zt);
@@ -128,7 +166,7 @@ namespace lidar_orto_photo
                     waveformPacket[25] = ztBytes[0];
                     waveformPacket[26] = ztBytes[1];
                     waveformPacket[27] = ztBytes[2];
-                    waveformPacket[28] = ztBytes[3];
+                    waveformPacket[28] = ztBytes[3];*/
                 }
                 lazWriter.laszip_write_point();
             }
@@ -162,7 +200,7 @@ namespace lidar_orto_photo
             var start = new ProcessStartInfo
             {
                 Arguments = "-i \"" + ResourceDirectoryPath +
-                          "laz12.laz\" -set_point_type 5 -set_version 1.3 -o \"" + ResourceDirectoryPath + "laz13.laz\"",
+                          "laz12.laz\" -set_point_type 5 -set_version 1.3 -o \"" + ResourceDirectoryPath + "laz13.laz\"", // point type 3
                 FileName = ResourceDirectoryPath + "las2las",
                 WindowStyle = ProcessWindowStyle.Hidden,
                 CreateNoWindow = false

@@ -36,9 +36,6 @@
     <ClInclude Include="dsytrd3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="kdtree2.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="laszip_api.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -71,17 +68,11 @@
     <ClCompile Include="dsytrd3.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="kdtree2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="KDTree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Point3d.cpp">
       <Filter>Header Files</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
   </ItemGroup>
 </Project>

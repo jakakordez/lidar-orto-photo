@@ -7,11 +7,20 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="600" Width="800">
     <Grid>
-        <local:mapView x:Name="mapView" Margin="415,59,10,10"/>
-        <Button x:Name="btnStart" Content="Start" HorizontalAlignment="Left" Height="51" Margin="145,3,0,0" VerticalAlignment="Top" Width="75" Click="btnStart_Click"/>
+        <local:MapView x:Name="mapView" Margin="415,59,10,10"/>
+        <Button x:Name="btnStart" Content="Start" HorizontalAlignment="Left" Height="51" Margin="145,3,0,0" VerticalAlignment="Top" Width="75" Click="BtnStart_Click"/>
         <CheckBox x:Name="chkNormals" Content="Include normals" HorizontalAlignment="Left" Margin="225,10,0,0" VerticalAlignment="Top"/>
         <TextBox x:Name="txtPath" Height="23" Margin="305,31,10,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top"/>
-        <TextBox x:Name="lstOutput" HorizontalAlignment="Left" Margin="10,59,0,10" Width="400" IsReadOnly="True" />
+        <ListView x:Name="lstJobs" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,59,0,0" Height="200" Width="400" SelectionChanged="lstJobs_SelectionChanged" >
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Task" Width="120" DisplayMemberBinding="{Binding TaskName}" />
+                    <GridViewColumn Header="Started" Width="150" DisplayMemberBinding="{Binding StartedString}" />
+                    <GridViewColumn Header="Tile" Width="80" DisplayMemberBinding="{Binding TileString}" />
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <TextBox x:Name="lstOutput" HorizontalAlignment="Left" Margin="10,269,0,10" Width="400" IsReadOnly="True" />
 
         <Button x:Name="btnFolder" Content="..." HorizontalAlignment="Left" Margin="225,31,0,0" VerticalAlignment="Top" Width="75" Height="23" Click="btnFolder_Click"/>
         <TextBox x:Name="txtLeft" HorizontalAlignment="Left" Height="23" Margin="10,16,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="40" TextChanged="TextChanged"/>

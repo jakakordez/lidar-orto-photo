@@ -17,6 +17,8 @@ using System.IO;
 using System.Threading;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using System.ComponentModel;
+using System.Windows.Controls.Primitives;
 
 namespace Lidar_UI
 {
@@ -27,91 +29,67 @@ namespace Lidar_UI
     {
         private readonly int[] SlovenianMapBounds = { 374, 30, 624, 194 }; //minx,miny,maxx,maxy in thousand, manualy set based on ARSO website
         int[] bounds = new int[4];
-        Thread worker;
+        Repository repository;
+        JobRunner jobRunner;
 
         public MainWindow()
         {
             InitializeComponent();
-            txtPath.Text = Directory.GetParent(Directory.GetCurrentDirectory()).Parent?.FullName + "\\resources\\";
-            mapView.Load(SlovenianMapBounds);
-            Console.SetOut(new OutputWriter(lstOutput));
+            
+            repository = new Repository();
+            mapView.Load(repository);
+            var dir = new DirectoryInfo(System.IO.Path.Combine(Directory.GetCurrentDirectory(), "repository"));
+            repository.Load(dir);
+            txtPath.Text = dir.FullName;
             SlovenianMapBounds.CopyTo(bounds, 0);
             UpdateValues();
+            jobRunner = new JobRunner(repository);
+            lstJobs.ItemsSource = jobRunner.jobs;
+            jobRunner.JobFinished += JobRunner_JobFinished;
+            jobRunner.JobStarted += JobRunner_JobStarted;
         }
 
-        
-
-        private void btnStart_Click(object sender, RoutedEventArgs e)
+        private void JobRunner_JobStarted(object sender, Job e)
         {
-            if (worker == null)
-            {
-                worker = new Thread(new ParameterizedThreadStart(async (object parameter) =>
-                {
-                    const int Workers = 4;
-                    List<Loader> loaders = new List<Loader>();
+            Dispatcher.Invoke(() => {
+                jobRunner.jobs.Add(e);
+                lstJobs.ItemsSource = jobRunner.jobs;
+                ICollectionView view = CollectionViewSource.GetDefaultView(jobRunner.jobs);
+                view.Refresh();
+            });
+        }
 
-                    var param = (Tuple<bool, string>)parameter;
-                    int index = 0;
-                    try
-                    {
-                        Console.WriteLine("[{0:hh:mm:ss}] Started with bounds: X: {1} - {3}, Y: {2} - {4}", DateTime.Now, bounds[0], bounds[1], bounds[2], bounds[3]);
-                        for (var x = bounds[0]; x <= bounds[2]; x++)
-                        {
-                            for (var y = bounds[1]; y <= bounds[3]; y++)
-                            {
-                                var url = Loader.GetArsoUrl(x + "_" + y);
-                                if (url == null) mapView.FillBlock(x, y, Colors.Red);
-                                else
-                                {
-                                    mapView.FillBlock(x, y, Colors.Yellow);
-                                    if(loaders.Count == Workers)
-                                    {
-                                        Task.WaitAny(loaders.Select(loader => loader.WorkerTask).ToArray());
-                                        loaders = loaders.Where(loader => !loader.WorkerTask.IsCompleted).ToList();
-                                        Console.WriteLine("[{0:hh:mm:ss}] Number of blocs proccesed:  {1}\n", DateTime.Now, index);
-                                    }
-                                    Console.WriteLine("[{0:hh:mm:ss}] Found URL: {1}", DateTime.Now, url);
-                                    Loader l = new Loader(index, url, param.Item2, param.Item1);
-                                    l.Start();
-                                    loaders.Add(l);
-                                    index++;
-                                    //mapView.FillBlock(x, y, Colors.Green);
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception exc)
-                    {
-                        Console.WriteLine("Exception");
-                        Console.WriteLine(exc.Message);
-                        Console.WriteLine(exc.StackTrace);
-                    }
-                    Console.WriteLine("[{0:hh:mm:ss}] Finished", DateTime.Now);
-                    Task.WaitAll(loaders.Select(loader => loader.WorkerTask).ToArray());
-                    btnStart_Click(this, null);
+        private void JobRunner_JobFinished(object sender, Job e)
+        {
+            Dispatcher.Invoke(() => {
+                jobRunner.jobs.Remove(e);
+                ICollectionView view = CollectionViewSource.GetDefaultView(jobRunner.jobs);
+                view.Refresh();
+                lstJobs.ItemsSource = jobRunner.jobs;
+            });
+        }
 
-                }));
-                worker.Start(new Tuple<bool, string>(chkNormals.IsChecked??false, txtPath.Text));
-                btnStart.Content = "Stop";
-                chkNormals.IsEnabled = false;
-                txtPath.IsEnabled = false;
-                txtLeft.IsEnabled = false;
-                txtBottom.IsEnabled = false;
-                txtRight.IsEnabled = false;
-                txtTop.IsEnabled = false;
-            }
-            else
-            {
-                if(worker.IsAlive) worker.Abort();
-                worker = null;
-                chkNormals.IsEnabled = true;
-                txtPath.IsEnabled = true;
-                txtLeft.IsEnabled = true;
-                txtBottom.IsEnabled = true;
-                txtRight.IsEnabled = true;
-                txtTop.IsEnabled = true;
-                btnStart.Content = "Start";
-            }
+        private async void BtnStart_Click(object sender, RoutedEventArgs e)
+        {
+            btnStart.Content = "Stop";
+            chkNormals.IsEnabled = false;
+            txtPath.IsEnabled = false;
+            txtLeft.IsEnabled = false;
+            txtBottom.IsEnabled = false;
+            txtRight.IsEnabled = false;
+            txtTop.IsEnabled = false;
+            btnStart.IsEnabled = false;
+
+            await jobRunner.RunArea(bounds[0], bounds[1], bounds[2], bounds[3]);
+
+            chkNormals.IsEnabled = true;
+            txtPath.IsEnabled = true;
+            txtLeft.IsEnabled = true;
+            txtBottom.IsEnabled = true;
+            txtRight.IsEnabled = true;
+            txtTop.IsEnabled = true;
+            btnStart.IsEnabled = true;
+            btnStart.Content = "Start";
         }
 
         private void btnFolder_Click(object sender, RoutedEventArgs e)
@@ -121,6 +99,7 @@ namespace Lidar_UI
             if(dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 txtPath.Text = dialog.SelectedPath;
+                repository.Load(new DirectoryInfo(txtPath.Text));
             }
         }
 
@@ -139,7 +118,7 @@ namespace Lidar_UI
             ReadBound(2, txtRight);
             ReadBound(3, txtTop);
 
-            mapView.SetArea(bounds);
+            //mapView.SetArea(bounds);
         }
 
         void ReadBound(int index, System.Windows.Controls.TextBox txt)
@@ -153,6 +132,11 @@ namespace Lidar_UI
             {
                 txt.Background = Brushes.Red;
             }
+        }
+
+        private void lstJobs_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            lstOutput.Text = ((Job)lstJobs.SelectedItem).Output;
         }
     }
 }

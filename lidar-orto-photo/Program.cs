@@ -27,11 +27,10 @@ namespace lidar_orto_photo
         private static readonly int[] SlovenianMapBounds = { 374, 30, 624, 194 }; //minx,miny,maxx,maxy in thousand, manualy set based on ARSO website
         private static bool IncludeNormals = false;
 
-        public static void Main()
+        public static void Main(string[] args)
         {
-	        Console.WriteLine("[{0:hh:mm:ss}] Start program. ", DateTime.Now);        
+            Console.WriteLine("[{0:hh:mm:ss}] Start program. ", DateTime.Now);        
 	        Console.WriteLine("[{0:hh:mm:ss}] Searching for valid ARSO Urls...", DateTime.Now);
-
 
             int index = 0;
 	        for (var x = SlovenianMapBounds[0]; x <= SlovenianMapBounds[2]; x++)
@@ -48,7 +47,7 @@ namespace lidar_orto_photo
 				        Console.WriteLine("[{0:hh:mm:ss}] Number of blocs proccesed:  {1}\n", DateTime.Now, index);
 			        }
 		        }
-	        }        
+	        }    
 	        Console.WriteLine("[{0:hh:mm:ss}] End program.", DateTime.Now);
         }//end main
 

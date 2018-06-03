@@ -17,13 +17,10 @@ namespace DownloadWorker
 {
     public class Loader
     {
-        private const int OrtoPhotoImgSize = 2000;
         private string ResourceDirectoryPath;
 
         private string lidarUrl;
         int x, y;
-
-        public Task WorkerTask;
 
         //param example: "gis.arso.gov.si/lidar/gkot/laz/b_35/D48GK/GK_462_104.laz"
         public Loader(int x, int y, string resourceDirectory)

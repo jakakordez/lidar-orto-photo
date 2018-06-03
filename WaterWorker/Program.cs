@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DownloadWorker
+namespace WaterWorker
 {
     class Program
     {
@@ -20,7 +20,7 @@ namespace DownloadWorker
             }
             catch
             {
-                Console.WriteLine("Usage: DownloadWorker PATH X Y");
+                Console.WriteLine("Usage: WaterWorker PATH X Y");
                 Console.WriteLine("Where:");
                 Console.WriteLine("  PATH - repository path");
                 Console.WriteLine("  X - x coordinate (374 - 624)");
@@ -35,11 +35,11 @@ namespace DownloadWorker
             }
             try
             {
-                Console.WriteLine("[{0:hh:mm:ss}] Start downloader tile {1} {2} ", DateTime.Now, x, y);
+                Console.WriteLine("[{0:hh:mm:ss}] Started adding water to tile {1} {2} ", DateTime.Now, x, y);
                 Loader l = new Loader(x, y, path);
                 l.Start();
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Console.WriteLine(e.Message);
                 Console.WriteLine(e.StackTrace);

@@ -36,32 +36,52 @@ namespace WaterWorker
 
         void WritePointcloud()
         {
-            Console.WriteLine("[{0:hh:mm:ss}] Reading and writing LAZ...", DateTime.Now);
+            Console.WriteLine("[{0:hh:mm:ss}] Generating water...", DateTime.Now);
+            List<XYZ> newPoints = new List<XYZ>();
+            foreach (var polygon in polygons)
+            {
+                var grid = polygon.GetGrid(1.0, x * 1000, y * 1000, (x + 1) * 1000, (y + 1) * 1000);
+                newPoints.AddRange(grid);
+            }
+
+            Console.WriteLine("[{0:hh:mm:ss}] Writing LAZ...", DateTime.Now);
             lazReader.laszip_seek_point(0L);//read from the beginning again
 
             lazWriter = new laszip_dll();
             lazWriter.header = lazReader.header;
+
+            lazWriter.header.number_of_point_records += (uint)newPoints.Count;
             lazWriter.laszip_open_writer(ResourceDirectoryPath + "/4-" + x + "-" + y + ".laz", true);
 
+            var coordArray = new double[3];
             for (var pointIndex = 0; pointIndex < numberOfPoints; pointIndex++)
             {
-                var coordArray = new double[3];
                 lazReader.laszip_read_point();
                 lazReader.laszip_get_coordinates(coordArray);
                 lazWriter.point = lazReader.point;
 
-                if(pointcloud.ContainsKey(pointIndex)
-                    && lazWriter.point.classification == 2) lazWriter.point.classification = 9;
+                if(pointcloud.ContainsKey(pointIndex)) lazWriter.point.classification = 9;
 
                 lazWriter.laszip_write_point();
             }
 
+            Console.WriteLine("[{0:hh:mm:ss}] Adding water...", DateTime.Now);
+            foreach (var gridPoint in newPoints)
+            {
+                lazWriter.point.classification = 9;
+                coordArray[0] = gridPoint.x;
+                coordArray[1] = gridPoint.y;
+                coordArray[2] = gridPoint.z;
+                lazWriter.laszip_set_coordinates(coordArray);
+                lazWriter.laszip_write_point();
+            }
             lazReader.laszip_close_reader();
             lazWriter.laszip_close_writer();
         }
 
         void LoadPointcloud()
         {
+            Console.WriteLine("[{0:hh:mm:ss}] Reading LAZ...", DateTime.Now);
             pointcloud = new Dictionary<int, XYZ>();
             lazReader = new laszip_dll();
             var compressed = true;
@@ -78,8 +98,11 @@ namespace WaterWorker
                 XYZ point = new XYZ() { x = coordArray[0], y = coordArray[1], z = coordArray[2] };
                 foreach (var polygon in polygons)
                 {
-                    if (polygon.InPolygon(point))
+                    if (polygon.InPolygon(point) && 
+                        (lazReader.point.classification == 2
+                        || polygon.IsOnWater(point, 15)))
                     {
+                        polygon.points[pointIndex] = point;
                         pointcloud[pointIndex] = point;
                         break;
                     }
@@ -89,6 +112,7 @@ namespace WaterWorker
 
         void LoadJson()
         {
+            Console.WriteLine("[{0:hh:mm:ss}] Loading JSON", DateTime.Now);
             polygons = new List<Polygon>();
             string url = BuildUrl(x * 1000, y * 1000, (x + 1) * 1000, (y + 1) * 1000);
             WebClient client = new WebClient();

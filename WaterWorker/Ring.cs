@@ -9,6 +9,11 @@ namespace WaterWorker
     class XYZ
     {
         public double x, y, z;
+
+        public double DistanceTo(XYZ point)
+        {
+            return (Math.Sqrt(Math.Pow(Math.Abs(x - point.x), 2) + Math.Pow(Math.Abs(y - point.y), 2)));
+        }
     }
 
     class Segment
@@ -65,6 +70,11 @@ namespace WaterWorker
             }
         }
 
+        internal bool IsOnWater(XYZ point, double offset)
+        {
+            return points.TrueForAll(r => r.DistanceTo(point) > offset);
+        }
+
         public double Top = double.MinValue;
 
         internal int Intersections(XYZ point)
@@ -75,5 +85,10 @@ namespace WaterWorker
         public double Bottom = double.MaxValue;
         public double Right = double.MinValue;
         public double Left = double.MaxValue;
+
+        internal double DistanceFromCoast(XYZ point)
+        {
+            return points.Select(p => p.DistanceTo(point)).Min();
+        }
     }
 }

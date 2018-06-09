@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using laszip.net;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +14,7 @@ namespace WaterWorker
     {
         private string ResourceDirectoryPath;
         int x, y;
+        Dictionary<int, XYZ> pointcloud;
 
         public Loader(int x, int y, string resourceDirectory)
         {
@@ -21,26 +23,81 @@ namespace WaterWorker
             ResourceDirectoryPath = resourceDirectory;
         }
 
+        List<Polygon> polygons;
+
         public void Start()
         {
+            LoadJson();
+            LoadPointcloud();
+            WritePointcloud();
+        }
+        laszip_dll lazReader, lazWriter;
+        long numberOfPoints;
+
+        void WritePointcloud()
+        {
+            Console.WriteLine("[{0:hh:mm:ss}] Reading and writing LAZ...", DateTime.Now);
+            lazReader.laszip_seek_point(0L);//read from the beginning again
+
+            lazWriter = new laszip_dll();
+            lazWriter.header = lazReader.header;
+            lazWriter.laszip_open_writer(ResourceDirectoryPath + "/4-" + x + "-" + y + ".laz", true);
+
+            for (var pointIndex = 0; pointIndex < numberOfPoints; pointIndex++)
+            {
+                var coordArray = new double[3];
+                lazReader.laszip_read_point();
+                lazReader.laszip_get_coordinates(coordArray);
+                lazWriter.point = lazReader.point;
+
+                if(pointcloud.ContainsKey(pointIndex)
+                    && lazWriter.point.classification == 2) lazWriter.point.classification = 9;
+
+                lazWriter.laszip_write_point();
+            }
+
+            lazReader.laszip_close_reader();
+            lazWriter.laszip_close_writer();
+        }
+
+        void LoadPointcloud()
+        {
+            pointcloud = new Dictionary<int, XYZ>();
+            lazReader = new laszip_dll();
+            var compressed = true;
+            var filePath = ResourceDirectoryPath + "/3-" + x + "-" + y + ".laz";
+
+            lazReader.laszip_open_reader(filePath, ref compressed);
+            numberOfPoints = lazReader.header.number_of_point_records;
+
+            for (var pointIndex = 0; pointIndex < numberOfPoints; pointIndex++)
+            {
+                var coordArray = new double[3];
+                lazReader.laszip_read_point();
+                lazReader.laszip_get_coordinates(coordArray);
+                XYZ point = new XYZ() { x = coordArray[0], y = coordArray[1], z = coordArray[2] };
+                foreach (var polygon in polygons)
+                {
+                    if (polygon.InPolygon(point))
+                    {
+                        pointcloud[pointIndex] = point;
+                        break;
+                    }
+                }
+            }
+        }
+
+        void LoadJson()
+        {
+            polygons = new List<Polygon>();
             string url = BuildUrl(x * 1000, y * 1000, (x + 1) * 1000, (y + 1) * 1000);
             WebClient client = new WebClient();
             var data = Encoding.UTF8.GetString(client.DownloadData(url));
             JObject jsonObject = JObject.Parse(data);
             foreach (var entity in jsonObject.Last.First.Children())
             {
-                var rings = entity["geometry"].First;
-                var geographical_name = entity["attributes"]["GEOG_IME"];
-                foreach (var ring in rings.Children())
-                {
-                    foreach (var point in ring.First.Children())
-                    {
-                        double x = point.First.ToObject<double>();
-                        double y = point.Last.ToObject<double>();
-                    }
-                }
+                polygons.Add(new Polygon(entity));
             }
-            
         }
 
         static string BuildUrl(int xmin, int ymin, int xmax, int ymax)

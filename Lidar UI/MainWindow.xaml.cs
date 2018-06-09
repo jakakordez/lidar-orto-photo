@@ -136,7 +136,9 @@ namespace Lidar_UI
 
         private void lstJobs_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            lstOutput.Text = ((Job)lstJobs.SelectedItem).Output;
+            if(lstJobs.Items.Count > 0
+                && lstJobs.SelectedItem != null)
+                lstOutput.Text = ((Job)lstJobs.SelectedItem).Output;
         }
     }
 }

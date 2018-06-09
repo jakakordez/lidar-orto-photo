@@ -32,6 +32,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="laszip.net, Version=2.2.0.0, Culture=neutral, PublicKeyToken=bc50e9aa04368e1b, processorArchitecture=MSIL">
+      <HintPath>..\packages\Unofficial.laszip.net.2.2.0\lib\net4\laszip.net.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -46,8 +49,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Loader.cs" />
+    <Compile Include="Polygon.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Ring.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

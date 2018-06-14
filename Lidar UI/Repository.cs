@@ -22,6 +22,8 @@ namespace Lidar_UI
 
         public Dictionary<TileId, Tile> Tiles = new Dictionary<TileId, Tile>();
 
+        public Municipalities municipalities = new Municipalities();
+
         public int Width => Right - Left + 1;
         public int Height => Top - Bottom + 1;
 
@@ -37,6 +39,13 @@ namespace Lidar_UI
             pixels1d = new byte[Height * Width * 3];
         }
 
+        internal Tile GenerateTile(TileId id)
+        {
+            var dir = DirectoryForTile(id);
+            if (!dir.Exists) Directory.CreateDirectory(dir.FullName);
+            return new Tile(id, dir);
+        }
+
         public void UpdateMap()
         {
             if(dispatcher != null)
@@ -47,6 +56,13 @@ namespace Lidar_UI
                     Wbitmap.WritePixels(rect, pixels1d, 3 * Width, 0);
                 });
             }
+        }
+
+        public DirectoryInfo DirectoryForTile(TileId id)
+        {
+            string path = Path.Combine(directory.FullName,
+                municipalities.map[id].ToString());
+            return new DirectoryInfo(path);
         }
 
         public void UpdateTile(Tile tile)
@@ -84,22 +100,23 @@ namespace Lidar_UI
         {
             this.directory = directory;
             ResetMap();
-
-            foreach (var file in directory.GetFiles())
+            foreach (var municipalityDir in directory.GetDirectories())
             {
-                if (file.FullName.EndsWith(".laz"))
+                foreach (var file in municipalityDir.GetFiles())
                 {
-                    try
+                    if (file.FullName.EndsWith(".laz"))
                     {
-                        var s = (Stages)Convert.ToInt32(file.Name.Split('-')[0]);
+                        try
+                        {
+                            var s = (Stages)Convert.ToInt32(file.Name.Split('-')[0]);
 
-                        TileId id = new TileId(file.Name);
-                        if (Tiles.ContainsKey(id)) Tiles[id].AddFile(file);
-                        else Tiles[id] = new Tile(file);
-                        FillBlock(id.x, id.y, Tiles[id].TileColor);
+                            TileId id = new TileId(file.Name);
+                            if (Tiles.ContainsKey(id)) Tiles[id].AddFile(file);
+                            else Tiles[id] = new Tile(file);
+                            FillBlock(id.x, id.y, Tiles[id].TileColor);
+                        }
+                        catch { }
                     }
-                    catch { }
-                    
                 }
             }
             

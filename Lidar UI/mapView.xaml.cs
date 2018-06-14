@@ -32,5 +32,11 @@ namespace Lidar_UI
             imgMap.Source = repository.Wbitmap;
             repository.dispatcher = Dispatcher;
         }
+
+        private void imgMap_MouseMove(object sender, MouseEventArgs e)
+        {
+            //imgMap.ToolTip = new Label() { Content = e.GetPosition(this).X.ToString() };
+            
+        }
     }
 }

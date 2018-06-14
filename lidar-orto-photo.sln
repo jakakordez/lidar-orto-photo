@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DownloadWorker", "DownloadW
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WaterWorker", "WaterWorker\WaterWorker.csproj", "{8662E629-DD15-49AF-9974-307A5067C521}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ColorWorker", "ColorWorker\ColorWorker.csproj", "{E0ADA310-9353-44EA-8D3E-6B808090E34A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -95,6 +97,18 @@ Global
 		{8662E629-DD15-49AF-9974-307A5067C521}.Release|x64.Build.0 = Release|Any CPU
 		{8662E629-DD15-49AF-9974-307A5067C521}.Release|x86.ActiveCfg = Release|Any CPU
 		{8662E629-DD15-49AF-9974-307A5067C521}.Release|x86.Build.0 = Release|Any CPU
+		{E0ADA310-9353-44EA-8D3E-6B808090E34A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E0ADA310-9353-44EA-8D3E-6B808090E34A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E0ADA310-9353-44EA-8D3E-6B808090E34A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E0ADA310-9353-44EA-8D3E-6B808090E34A}.Debug|x64.Build.0 = Debug|Any CPU
+		{E0ADA310-9353-44EA-8D3E-6B808090E34A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E0ADA310-9353-44EA-8D3E-6B808090E34A}.Debug|x86.Build.0 = Debug|Any CPU
+		{E0ADA310-9353-44EA-8D3E-6B808090E34A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E0ADA310-9353-44EA-8D3E-6B808090E34A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E0ADA310-9353-44EA-8D3E-6B808090E34A}.Release|x64.ActiveCfg = Release|Any CPU
+		{E0ADA310-9353-44EA-8D3E-6B808090E34A}.Release|x64.Build.0 = Release|Any CPU
+		{E0ADA310-9353-44EA-8D3E-6B808090E34A}.Release|x86.ActiveCfg = Release|Any CPU
+		{E0ADA310-9353-44EA-8D3E-6B808090E34A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -10,9 +10,9 @@ namespace Lidar_UI
 {
     class JobRunner
     {
-        const int workers = 2;
+        const int workers = 6;
 
-        public bool Cleanup = true;
+        public bool Cleanup = false;
 
         Repository repository;
 
@@ -25,6 +25,8 @@ namespace Lidar_UI
 
         public event EventHandler<Job> JobStarted;
         public event EventHandler<Job> JobFinished;
+
+        
 
         public async Task RunArea(int x1, int y1, int x2, int y2)
         {
@@ -41,7 +43,8 @@ namespace Lidar_UI
                     }
                     else
                     {
-                        tiles[id] = repository.Tiles[id] = new Tile(id, repository.directory);
+                        var tile = repository.GenerateTile(id);
+                        tiles[id] = repository.Tiles[id] = tile;
                     }
                     repository.UpdateTile(tiles[id]);
                 }
@@ -53,11 +56,12 @@ namespace Lidar_UI
 
             TransformBlock<Tile, Tile> workerBlock = new TransformBlock<Tile, Tile>(async t =>
             {
+                t.Rescan(repository.DirectoryForTile(t.id));
                 var job = Job.NextJob(t);
                 if (job == null) return t;
                 JobStarted.Invoke(this, job);
                 await job.Run(Cleanup);
-                t.Rescan(repository.directory);
+                t.Rescan(repository.DirectoryForTile(t.id));
                 JobFinished.Invoke(this, job);
                 return t;
             }, new ExecutionDataflowBlockOptions()
@@ -65,7 +69,7 @@ namespace Lidar_UI
                 MaxDegreeOfParallelism = workers,
             });
 
-            ActionBlock<Tile> mapUpdater = new ActionBlock<Tile>(t => repository.UpdateTile(t));
+            //ActionBlock<Tile> mapUpdater = new ActionBlock<Tile>(t => repository.UpdateTile(t));
             TaskCompletionSource<int> finishTask = new TaskCompletionSource<int>();
             int finishedCounter = tiles.Count;
             ActionBlock<Tile> tileFinished = new ActionBlock<Tile>(t => {
@@ -79,7 +83,7 @@ namespace Lidar_UI
             waitingQueue.LinkTo(workerBlock);
             workerBlock.LinkTo(waitingQueue, t => Job.NextJob(t) != null);
             workerBlock.LinkTo(tileFinished, t => Job.NextJob(t) == null);
-            workerBlock.LinkTo(mapUpdater);
+            //workerBlock.LinkTo(mapUpdater);
 
             foreach (var pair in tiles)
             {

@@ -10,7 +10,10 @@
         <Image x:Name="imgMap" 
                Stretch="Uniform" 
                RenderOptions.BitmapScalingMode="NearestNeighbor"
-                RenderOptions.EdgeMode="Aliased"
-               />
+                RenderOptions.EdgeMode="Aliased" MouseMove="imgMap_MouseMove">
+            <Image.ToolTip>
+            <ToolTip>Map</ToolTip>
+            </Image.ToolTip>
+        </Image>
     </Grid>
 </UserControl>

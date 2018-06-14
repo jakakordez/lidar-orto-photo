@@ -35,8 +35,17 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="clipper_library, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Clipper.6.4.0\lib\net40\clipper_library.dll</HintPath>
+    </Reference>
+    <Reference Include="geometry3Sharp, Version=1.0.144.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\geometry3Sharp.1.0.144\lib\net45\geometry3Sharp.dll</HintPath>
+    </Reference>
     <Reference Include="KdTreeLib, Version=1.4.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\KdTree.1.4.1\lib\net462\KdTreeLib.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -64,8 +73,15 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="JobRunner.cs" />
+    <Compile Include="Jobs\ColorJob.cs" />
     <Compile Include="Jobs\DownloadJob.cs" />
     <Compile Include="Jobs\Job.cs" />
+    <Compile Include="Jobs\WaterJob.cs" />
+    <Compile Include="Municipalities.cs" />
+    <Compile Include="MunicipalitiesView.xaml.cs">
+      <DependentUpon>MunicipalitiesView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Municipality.cs" />
     <Compile Include="Repository.cs" />
     <Compile Include="Tile.cs" />
     <Page Include="MainWindow.xaml">
@@ -81,6 +97,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="mapView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MunicipalitiesView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

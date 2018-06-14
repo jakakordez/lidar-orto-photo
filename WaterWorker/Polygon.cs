@@ -65,6 +65,7 @@ namespace WaterWorker
 
                 return dist;
             };
+            if (points.Count == 0) return new List<XYZ>();
             var treeData = points.Values.Select(p => new double[] { p.x, p.y }).ToArray();
             KDTree<double, XYZ> tree = new KDTree<double, XYZ>(2, treeData, points.Values.ToArray(), L2Norm);
 
@@ -82,8 +83,8 @@ namespace WaterWorker
                         var nearest = tree.NearestNeighbors(new double[] { x, y }, 1)[0].Item2;
                         if (point.DistanceTo(nearest) > spacing)
                         {
-                            x += ((r.NextDouble() * spacing) - (spacing / 2))*0.5;
-                            y += ((r.NextDouble() * spacing) - (spacing / 2))*0.5;
+                            point.x += ((r.NextDouble() * spacing) - (spacing / 2))*0.5;
+                            point.y += ((r.NextDouble() * spacing) - (spacing / 2))*0.5;
                             grid.Add(point);
                         }
                     }

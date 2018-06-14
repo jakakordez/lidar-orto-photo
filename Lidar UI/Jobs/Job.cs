@@ -27,14 +27,17 @@ namespace Lidar_UI
 
         public JobStatuses Status {
             get {
-                if (process == null) return JobStatuses.WAITING;
-                else if (process.HasExited) return JobStatuses.RUNNING;
-                else if (process.ExitCode == 0) return JobStatuses.FINISHED;
-                else return JobStatuses.FAILED;
+                try
+                {
+                    if (!process.HasExited) return JobStatuses.RUNNING;
+                    else if (process.ExitCode == 0) return JobStatuses.FINISHED;
+                    else return JobStatuses.FAILED;
+                }
+                catch { return JobStatuses.WAITING; }
             }
         }
 
-        Tile tile;
+        public Tile tile;
 
         public FileInfo StartFile => tile.Files[Start];
         public FileInfo ProgressFile => tile.Files[Progress];
@@ -43,7 +46,7 @@ namespace Lidar_UI
         private Process process;
 
         public string Output;
-        public DateTime Started;
+        public DateTime Started, Finished;
 
         public Job(Tile tile)
         {
@@ -54,6 +57,7 @@ namespace Lidar_UI
         {
             Output = "";
             Started = DateTime.Now;
+            Finished = DateTime.MinValue;
             return Task.Run(() =>
             {
                 string filename = tile.id.GetFilename(Progress);
@@ -69,6 +73,7 @@ namespace Lidar_UI
                         if(StartFile.Exists && !IsFileLocked(StartFile)) StartFile.Delete();
                     }
                 }
+                Finished = DateTime.Now;
             });
         }
 
@@ -115,13 +120,15 @@ namespace Lidar_UI
 
         public static Job NextJob(Tile tile)
         {
+            
             switch (tile.Stage)
             {
                 case Stages.Unknown:
                     return new DownloadJob(tile);
                 case Stages.Downloaded:
-                    return null;
+                    return new WaterJob(tile);
                 case Stages.Water:
+                    return new ColorJob(tile);
                     return null;
                 case Stages.Colors:
                     return null;
@@ -139,6 +146,12 @@ namespace Lidar_UI
         public abstract string TaskName { get; }
 
         public string StartedString => Started.ToString("dd.MM.yyyy HH:mm:ss");
+
+        public string FinishedString => 
+            Finished == DateTime.MinValue?
+                "":Finished.ToString("dd.MM.yyyy HH:mm:ss");
+
+        public string StatusString => Enum.GetName(typeof(JobStatuses), Status);
 
         public string TileString => tile.id.ToString();
     }

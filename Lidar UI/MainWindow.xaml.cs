@@ -62,10 +62,11 @@ namespace Lidar_UI
         private void JobRunner_JobFinished(object sender, Job e)
         {
             Dispatcher.Invoke(() => {
-                jobRunner.jobs.Remove(e);
+                //jobRunner.jobs.Remove(e);
                 ICollectionView view = CollectionViewSource.GetDefaultView(jobRunner.jobs);
                 view.Refresh();
                 lstJobs.ItemsSource = jobRunner.jobs;
+                repository.UpdateTile(e.tile);
             });
         }
 
@@ -139,6 +140,12 @@ namespace Lidar_UI
             if(lstJobs.Items.Count > 0
                 && lstJobs.SelectedItem != null)
                 lstOutput.Text = ((Job)lstJobs.SelectedItem).Output;
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            MunicipalitiesView v = new MunicipalitiesView(repository);
+            v.Show();
         }
     }
 }

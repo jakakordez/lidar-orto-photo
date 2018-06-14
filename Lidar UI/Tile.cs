@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ClipperLib;
+using g3;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -34,6 +36,18 @@ namespace Lidar_UI
         {
             return x + " " + y;
         }
+
+        public int Left => x * 1000;
+        public int Right => (x + 1) * 1000;
+        public int Bottom => y * 1000;
+        public int Top => (y + 1) * 1000;
+
+        public List<IntPoint> Polygon => new List<IntPoint>() {
+            new IntPoint(Left, Bottom),
+            new IntPoint(Right, Bottom),
+            new IntPoint(Right, Top),
+            new IntPoint(Left, Top)
+        };
     }
 
     public enum Stages
@@ -71,6 +85,13 @@ namespace Lidar_UI
 
         public Stages Stage => Files.Keys.Count > 0 ? Files.Keys.Max() : Stages.Unknown;
 
+        /*public Polygon2d Polygon => new Polygon2d(new Vector2d[] {
+            new Vector2d(id.Left, id.Bottom),
+            new Vector2d(id.Right, id.Bottom),
+            new Vector2d(id.Right, id.Top),
+            new Vector2d(id.Left, id.Top)
+        });*/
+
         public Tile(FileInfo file)
         {
             string[] parts = file.Name.Replace(".laz", "").Split('-');
@@ -96,7 +117,7 @@ namespace Lidar_UI
             Files = new Dictionary<Stages, FileInfo>();
             for (int i = 0; i < Enum.GetNames(typeof(Stages)).Length; i++)
             {
-                var file = new FileInfo(Path.Combine(path.FullName, id.GetFilename(Stages.Unknown)));
+                var file = new FileInfo(Path.Combine(path.FullName, id.GetFilename((Stages)i)));
                 if (file.Exists) Files[(Stages)i] = file;
             }
         }

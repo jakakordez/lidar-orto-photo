@@ -7,29 +7,31 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="600" Width="800">
     <Grid>
-        <local:MapView x:Name="mapView" Margin="535,59,10,10"/>
+        <local:MapView x:Name="mapView" Margin="515,59,10,10"/>
         <Button x:Name="btnStart" Content="Start" HorizontalAlignment="Left" Height="51" Margin="145,3,0,0" VerticalAlignment="Top" Width="75" Click="BtnStart_Click"/>
-        <CheckBox x:Name="chkNormals" Content="Include normals" HorizontalAlignment="Left" Margin="225,10,0,0" VerticalAlignment="Top"/>
         <TextBox x:Name="txtPath" Height="23" Margin="305,31,10,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top"/>
-        <ListView x:Name="lstJobs" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,59,0,0" Height="300" Width="520" SelectionChanged="lstJobs_SelectionChanged" >
+        <ListView x:Name="lstJobs" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,59,0,0" Height="400" Width="500" SelectionChanged="lstJobs_SelectionChanged" >
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="Task" Width="90" DisplayMemberBinding="{Binding TaskName}" />
-                    <GridViewColumn Header="Started" Width="140" DisplayMemberBinding="{Binding StartedString}" />
-                    <GridViewColumn Header="Finished" Width="140" DisplayMemberBinding="{Binding FinishedString}" />
-                    <GridViewColumn Header="Tile" Width="80" DisplayMemberBinding="{Binding TileString}" />
-                    <GridViewColumn Header="Status" Width="60" DisplayMemberBinding="{Binding StatusString}" />
+                    <GridViewColumn Header="Task" Width="80" DisplayMemberBinding="{Binding TaskName}" />
+                    <GridViewColumn Header="Started" Width="130" DisplayMemberBinding="{Binding StartedString}" />
+                    <GridViewColumn Header="Finished" Width="130" DisplayMemberBinding="{Binding FinishedString}" />
+                    <GridViewColumn Header="Tile" Width="70" DisplayMemberBinding="{Binding TileString}" />
+                    <GridViewColumn Header="Status" Width="70" DisplayMemberBinding="{Binding StatusString}" />
                 </GridView>
             </ListView.View>
         </ListView>
-        <TextBox x:Name="lstOutput" HorizontalAlignment="Left" Margin="10,369,0,10" Width="520" IsReadOnly="True" />
+        <TextBox x:Name="lstOutput" HorizontalAlignment="Left" Margin="10,469,0,10" Width="500" IsReadOnly="True" />
 
         <Button x:Name="btnFolder" Content="..." HorizontalAlignment="Left" Margin="225,31,0,0" VerticalAlignment="Top" Width="75" Height="23" Click="btnFolder_Click"/>
         <TextBox x:Name="txtLeft" HorizontalAlignment="Left" Height="23" Margin="10,16,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="40" TextChanged="TextChanged"/>
         <TextBox x:Name="txtBottom" HorizontalAlignment="Left" Height="23" Margin="55,31,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="40" TextChanged="TextChanged"/>
         <TextBox x:Name="txtRight" HorizontalAlignment="Left" Height="23" Margin="100,16,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="40" TextChanged="TextChanged"/>
         <TextBox x:Name="txtTop" HorizontalAlignment="Left" Height="23" Margin="55,3,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="40" TextChanged="TextChanged"/>
-        <Button Content="Municipalities" HorizontalAlignment="Left" VerticalAlignment="Top" Width="96" Margin="348,6,0,0" Click="Button_Click"/>
-
+        <Button Content="Municipalities" HorizontalAlignment="Left" VerticalAlignment="Top" Width="96" Margin="225,6,0,0" Click="Button_Click"/>
+        <CheckBox x:Name="chkDownload" IsChecked="True"  Content="Download" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="326,9,0,0"/>
+        <CheckBox x:Name="chkWater" IsChecked="True" Content="Water" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="426,9,0,0"/>
+        <CheckBox x:Name="chkColor" IsChecked="True" Content="Color" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="526,9,0,0"/>
+        <CheckBox x:Name="chkNormals" IsChecked="True" Content="Normals" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="626,9,0,0"/>
     </Grid>
 </Window>

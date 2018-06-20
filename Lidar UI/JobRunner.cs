@@ -26,7 +26,7 @@ namespace Lidar_UI
         public event EventHandler<Job> JobStarted;
         public event EventHandler<Job> JobFinished;
 
-        
+        public static bool download, color, normals, water;
 
         public async Task RunArea(int x1, int y1, int x2, int y2)
         {

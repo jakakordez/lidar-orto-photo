@@ -81,6 +81,10 @@ namespace Lidar_UI
             txtTop.IsEnabled = false;
             btnStart.IsEnabled = false;
 
+            JobRunner.download = chkDownload.IsChecked ?? false;
+            JobRunner.color = chkColor.IsChecked ?? false;
+            JobRunner.normals = chkNormals.IsChecked ?? false;
+            JobRunner.water = chkWater.IsChecked ?? false;
             await jobRunner.RunArea(bounds[0], bounds[1], bounds[2], bounds[3]);
 
             chkNormals.IsEnabled = true;

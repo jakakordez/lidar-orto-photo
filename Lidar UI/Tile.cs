@@ -70,6 +70,8 @@ namespace Lidar_UI
 
         public Dictionary<Stages, FileInfo> Files = new Dictionary<Stages, FileInfo>();
 
+        public int FailedCount = 0;
+
         public Color TileColor => (new Color[] {
             Colors.DarkGray,
             Colors.DarkBlue,

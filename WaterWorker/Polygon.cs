@@ -69,7 +69,7 @@ namespace WaterWorker
             var treeData = points.Values.Select(p => new double[] { p.x, p.y }).ToArray();
             KDTree<double, XYZ> tree = new KDTree<double, XYZ>(2, treeData, points.Values.ToArray(), L2Norm);
 
-            double elevation = points.Select(p => p.Value.z).Average();
+            //double elevation = points.Select(p => p.Value.z).Average();
 
             Random r = new Random();
             List<XYZ> grid = new List<XYZ>();
@@ -77,14 +77,16 @@ namespace WaterWorker
             {
                 for (double y = Math.Max(Bottom, ymin); y <= Math.Min(Top, ymax); y += spacing)
                 {
-                    XYZ point = new XYZ() { x = x, y = y, z = elevation };
+                    XYZ point = new XYZ() { x = x, y = y/*, z = elevation */};
                     if (InPolygon(point))
                     {
-                        var nearest = tree.NearestNeighbors(new double[] { x, y }, 1)[0].Item2;
+                        var nearestPoints = tree.NearestNeighbors(new double[] { x, y }, 5);
+                        var nearest = nearestPoints[0].Item2;
                         if (point.DistanceTo(nearest) > spacing)
                         {
                             point.x += ((r.NextDouble() * spacing) - (spacing / 2))*0.5;
                             point.y += ((r.NextDouble() * spacing) - (spacing / 2))*0.5;
+                            point.z = nearestPoints.Select(p => p.Item2.z).Average();
                             grid.Add(point);
                         }
                     }

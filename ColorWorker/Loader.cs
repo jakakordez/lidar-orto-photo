@@ -33,8 +33,19 @@ namespace ColorWorker
             lazReader.laszip_open_reader(filePath, ref compressed);
             var numberOfPoints = lazReader.header.number_of_point_records;
             //var kdTree = new KDTree(3);
-
-            var img = GetOrthophotoImg();
+            Bitmap img = null;
+            for (int i = 0; i < 4; i++)
+            {
+                try
+                {
+                    img = GetOrthophotoImg();
+                    break;
+                }
+                catch (Exception e){
+                    Console.WriteLine("[{0:hh:mm:ss}] Image download failed...", DateTime.Now);
+                }
+            }
+            if (img == null) throw new Exception();
 
             Console.WriteLine("[{0:hh:mm:ss}] Reading and writing LAZ...", DateTime.Now);
             lazReader.laszip_seek_point(0L);//read from the beginning again
@@ -54,6 +65,9 @@ namespace ColorWorker
                 int[] pxCoordinates = FindClosestPxCoordinates(coordArray[0], coordArray[1]);
                 int i = (pxCoordinates[0] - _bottomLeftX) * 2;
                 int j = img.Height - 1 - ((pxCoordinates[1] - _bottomLeftY) * 2);//j index of image goes from top to bottom
+
+                i = Math.Min(Math.Max(i, img.Width - 1), 0);
+                j = Math.Min(Math.Max(j, img.Height - 1), 0);
 
                 Color color = img.GetPixel(i, j); //binary int value						
                 lazReader.point.rgb = new[] {
@@ -118,16 +132,29 @@ namespace ColorWorker
             double maxX = minX + 999.999999999;
             double maxY = minY + 999.999999999;
 
-            Console.WriteLine("[{0:hh:mm:ss}] Downloading image...", DateTime.Now);
-            var request = WebRequest.Create("http://gis.arso.gov.si/arcgis/rest/services/DOF_2016/MapServer/export" +
-                                               $"?bbox={minX}%2C{minY}%2C{maxX}%2C{maxY}&bboxSR=&layers=&layerDefs=" +
-                                               $"&size={OrtoPhotoImgSize}%2C{OrtoPhotoImgSize}&imageSR=&format=png" +
-                                               "&transparent=false&dpi=&time=&layerTimeOptions=" +
-                                               "&dynamicLayers=&gdbVersion=&mapScale=&f=image");
+            Console.WriteLine("[{0:hh:mm:ss}] Downloading image with web client...", DateTime.Now);
+
+            string remoteUri = "http://gis.arso.gov.si/arcgis/rest/services/DOF_2016/MapServer/export" +
+                                                $"?bbox={minX}%2C{minY}%2C{maxX}%2C{maxY}&bboxSR=&layers=&layerDefs=" +
+                                                $"&size={OrtoPhotoImgSize}%2C{OrtoPhotoImgSize}&imageSR=&format=png" +
+                                                "&transparent=false&dpi=&time=&layerTimeOptions=" +
+                                                "&dynamicLayers=&gdbVersion=&mapScale=&f=image";
+            string fileName = minX+"-"+minY+".png ";
+
+            WebClient myWebClient = new WebClient();
+            myWebClient.DownloadFile(remoteUri, fileName);
+
+            return (Bitmap)Image.FromFile(fileName);
+            /*
+            var request = WebRequest.CreateHttp("http://gis.arso.gov.si/arcgis/rest/services/DOF_2016/MapServer/export" +
+                                                $"?bbox={minX}%2C{minY}%2C{maxX}%2C{maxY}&bboxSR=&layers=&layerDefs=" +
+                                                $"&size={OrtoPhotoImgSize}%2C{OrtoPhotoImgSize}&imageSR=&format=png" +
+                                                "&transparent=false&dpi=&time=&layerTimeOptions=" +
+                                                "&dynamicLayers=&gdbVersion=&mapScale=&f=image");
             WebResponse response = request.GetResponse();
             Stream responseStream = response.GetResponseStream();
             //Console.WriteLine("[DONE]");
-            return new Bitmap(responseStream ?? throw new Exception());
+            return new Bitmap(responseStream?? throw new Exception());*/
         }
     }
 }

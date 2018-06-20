@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -39,7 +41,15 @@ namespace DownloadWorker
                 Loader l = new Loader(x, y, path);
                 l.Start();
             }
-            catch(Exception e)
+            catch (WebException e)
+            {
+                Console.WriteLine("Web exception ");
+                if (e.Response is HttpWebRequest) Console.WriteLine("Code: " + ((HttpWebResponse)e.Response).StatusCode);
+                Console.WriteLine(e.Response.ResponseUri.AbsoluteUri);
+                var response = new StreamReader(e.Response.GetResponseStream()).ReadToEnd();
+                Console.WriteLine(response);
+            }
+            catch (Exception e)
             {
                 Console.WriteLine(e.Message);
                 Console.WriteLine(e.StackTrace);

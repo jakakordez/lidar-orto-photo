@@ -63,16 +63,20 @@ namespace Lidar_UI
                 string filename = tile.id.GetFilename(Progress);
                 FileInfo progressFile = new FileInfo(Path.Combine(StartFile.DirectoryName, tile.id.GetFilename(Progress)));
                 bool result = RunProcess(tile);
-                if (result) {
+                if (result)
+                {
+                    tile.FailedCount = 0;
                     string newFilename = Path.Combine(StartFile.DirectoryName, tile.id.GetFilename(End));
                     if (progressFile.Exists)
                     {
                         progressFile.MoveTo(newFilename);
                     }
-                    if (cleanup){
-                        if(StartFile.Exists && !IsFileLocked(StartFile)) StartFile.Delete();
+                    if (cleanup)
+                    {
+                        if (StartFile.Exists && !IsFileLocked(StartFile)) StartFile.Delete();
                     }
                 }
+                else tile.FailedCount++;
                 Finished = DateTime.Now;
             });
         }
@@ -120,16 +124,15 @@ namespace Lidar_UI
 
         public static Job NextJob(Tile tile)
         {
-            
+            if (tile.FailedCount > 3) return null;
             switch (tile.Stage)
             {
                 case Stages.Unknown:
-                    return new DownloadJob(tile);
+                    return JobRunner.download?new DownloadJob(tile):null;
                 case Stages.Downloaded:
-                    return new WaterJob(tile);
+                    return JobRunner.water?new WaterJob(tile):null;
                 case Stages.Water:
-                    return new ColorJob(tile);
-                    return null;
+                    return JobRunner.color?new ColorJob(tile):null;
                 case Stages.Colors:
                     return null;
                 case Stages.Missing:

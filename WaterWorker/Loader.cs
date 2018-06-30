@@ -1,5 +1,6 @@
 ﻿using laszip.net;
 using Newtonsoft.Json.Linq;
+using Supercluster.KDTree;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -60,7 +61,7 @@ namespace WaterWorker
                 lazReader.laszip_get_coordinates(coordArray);
                 lazWriter.point = lazReader.point;
 
-                if(pointcloud.ContainsKey(pointIndex)) lazWriter.point.classification = 9;
+                if(pointcloud.ContainsKey(pointIndex)) lazWriter.point.classification = WATER_CLASSIFICATION;
 
                 lazWriter.laszip_write_point();
             }
@@ -79,6 +80,19 @@ namespace WaterWorker
             lazWriter.laszip_close_writer();
         }
 
+        KDTree<double, XYZ> tree;
+        public static Func<double[], double[], double> L2Norm = (x, y) =>
+        {
+            double dist = 0;
+            for (int i = 0; i < x.Length; i++)
+            {
+                dist += (x[i] - y[i]) * (x[i] - y[i]);
+            }
+
+            return dist;
+        };
+        public const int GROUND_CLASSIFICATION = 2;
+        public const int WATER_CLASSIFICATION = 9;
         void LoadPointcloud()
         {
             Console.WriteLine("[{0:hh:mm:ss}] Reading LAZ...", DateTime.Now);
@@ -98,13 +112,41 @@ namespace WaterWorker
                 XYZ point = new XYZ() { x = coordArray[0], y = coordArray[1], z = coordArray[2] };
                 foreach (var polygon in polygons)
                 {
-                    if (polygon.InPolygon(point) && 
-                        (lazReader.point.classification == 2
-                        || polygon.IsOnWater(point, 15)))
-                    {
-                        polygon.points[pointIndex] = point;
-                        pointcloud[pointIndex] = point;
+                    if (polygon.InPolygon(point)) {
+                        if (lazReader.point.classification == WATER_CLASSIFICATION) {
+                            polygon.points[pointIndex] = point;
+                            pointcloud[pointIndex] = point;
+                        }
+                        polygon.allPoints[pointIndex] = point;
                         break;
+                    }
+                }
+            }
+
+            foreach (var polygon in polygons)
+            {
+                if (polygon.allPoints.Count == 0) continue;
+                //var treeData = polygon.allPoints.Values.Select(p => new double[] { p.x, p.y }).ToArray();
+                //KDTree<double, XYZ> tree = new KDTree<double, XYZ>(2, treeData, polygon.allPoints.Values.ToArray(), L2Norm);
+                double elevation;
+                if (polygon.points.Count > 0) elevation = polygon.points.Select(p => p.Value.z).Average();
+                else elevation = polygon.allPoints.Select(p => p.Value.z).Min();
+
+                foreach (var point in polygon.allPoints)
+                {
+                    if (!pointcloud.ContainsKey(point.Key) /*&&
+                        polygon.IsOnWater(point.Value, 15)*/)
+                    {
+
+                        /*var nearestPoints = tree.NearestNeighbors(
+                            new double[] { point.Value.x, point.Value.y }, 100);
+                        var z = nearestPoints.Min(p => p.Item2.z);
+                        */
+                        if (point.Value.z < elevation + 1.0)
+                        {
+                            polygon.points[point.Key] = point.Value;
+                            pointcloud[point.Key] = point.Value;
+                        }
                     }
                 }
             }

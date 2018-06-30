@@ -12,7 +12,7 @@ namespace Lidar_UI
     {
         const int workers = 6;
 
-        public bool Cleanup = false;
+        public static bool Cleanup = false;
 
         Repository repository;
 

@@ -31,7 +31,8 @@
         <Button Content="Municipalities" HorizontalAlignment="Left" VerticalAlignment="Top" Width="96" Margin="225,6,0,0" Click="Button_Click"/>
         <CheckBox x:Name="chkDownload" IsChecked="True"  Content="Download" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="326,9,0,0"/>
         <CheckBox x:Name="chkWater" IsChecked="True" Content="Water" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="426,9,0,0"/>
-        <CheckBox x:Name="chkColor" IsChecked="True" Content="Color" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="526,9,0,0"/>
-        <CheckBox x:Name="chkNormals" IsChecked="True" Content="Normals" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="626,9,0,0"/>
+        <CheckBox x:Name="chkColor" IsChecked="True" Content="Color" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="506,9,0,0"/>
+        <CheckBox x:Name="chkNormals" IsChecked="True" Content="Normals" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="586,9,0,0"/>
+        <CheckBox x:Name="chkCleanup" IsChecked="False" Content="Cleanup" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="686,9,0,0"/>
     </Grid>
 </Window>

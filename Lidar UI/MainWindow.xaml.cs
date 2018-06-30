@@ -85,6 +85,7 @@ namespace Lidar_UI
             JobRunner.color = chkColor.IsChecked ?? false;
             JobRunner.normals = chkNormals.IsChecked ?? false;
             JobRunner.water = chkWater.IsChecked ?? false;
+            JobRunner.Cleanup = chkCleanup.IsChecked ?? false;
             await jobRunner.RunArea(bounds[0], bounds[1], bounds[2], bounds[3]);
 
             chkNormals.IsEnabled = true;

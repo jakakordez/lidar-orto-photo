@@ -18,7 +18,7 @@ namespace LAZReader
             lazReader.laszip_open_reader(filePath, ref compressed);
             var numberOfPoints = lazReader.header.number_of_point_records;
             var coordArray = new double[3];
-            Console.Write("[{0:hh:mm:ss}] Reading LAZ...", DateTime.Now);
+            Console.WriteLine("[{0:hh:mm:ss}] Reading LAZ... {1} points", DateTime.Now, numberOfPoints);
             for (var pointIndex = 0; pointIndex < numberOfPoints; pointIndex++)
             {
                 lazReader.laszip_read_point();

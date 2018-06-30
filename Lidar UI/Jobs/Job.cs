@@ -124,7 +124,7 @@ namespace Lidar_UI
 
         public static Job NextJob(Tile tile)
         {
-            if (tile.FailedCount > 3) return null;
+            if (tile.FailedCount > 2) return null;
             switch (tile.Stage)
             {
                 case Stages.Unknown:
@@ -134,7 +134,7 @@ namespace Lidar_UI
                 case Stages.Water:
                     return JobRunner.color?new ColorJob(tile):null;
                 case Stages.Colors:
-                    return null;
+                    return JobRunner.normals?new NormalJob(tile):null;
                 case Stages.Missing:
                 case Stages.Downloading:
                 case Stages.AddingWater:

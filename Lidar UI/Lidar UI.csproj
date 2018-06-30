@@ -76,6 +76,7 @@
     <Compile Include="Jobs\ColorJob.cs" />
     <Compile Include="Jobs\DownloadJob.cs" />
     <Compile Include="Jobs\Job.cs" />
+    <Compile Include="Jobs\NormalJob.cs" />
     <Compile Include="Jobs\WaterJob.cs" />
     <Compile Include="Municipalities.cs" />
     <Compile Include="MunicipalitiesView.xaml.cs">

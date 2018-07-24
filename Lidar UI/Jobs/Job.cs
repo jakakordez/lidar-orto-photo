@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using static Lidar_UI.Tile;
@@ -53,7 +54,7 @@ namespace Lidar_UI
             this.tile = tile;
         }
 
-        public Task Run(bool cleanup = false)
+        public Task Run(CancellationToken token, bool cleanup = false)
         {
             Output = "";
             Started = DateTime.Now;
@@ -62,7 +63,7 @@ namespace Lidar_UI
             {
                 string filename = tile.id.GetFilename(Progress);
                 FileInfo progressFile = new FileInfo(Path.Combine(StartFile.DirectoryName, tile.id.GetFilename(Progress)));
-                bool result = RunProcess(tile);
+                bool result = RunProcess(tile, token);
                 if (result)
                 {
                     tile.FailedCount = 0;
@@ -78,7 +79,7 @@ namespace Lidar_UI
                 }
                 else tile.FailedCount++;
                 Finished = DateTime.Now;
-            });
+            }, token);
         }
 
         protected virtual bool IsFileLocked(FileInfo file)
@@ -107,16 +108,26 @@ namespace Lidar_UI
             return false;
         }
 
-        private bool RunProcess(Tile t)
+        private bool RunProcess(Tile t, CancellationToken token)
         {
             process = GetProcess(t);
-            
+
+            process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            process.StartInfo.CreateNoWindow = true;
             process.StartInfo.UseShellExecute = false;
+            process.StartInfo.RedirectStandardError = true;
             process.StartInfo.RedirectStandardOutput = true;
             process.OutputDataReceived += (sender, args) => Output += args.Data + "\n";
             process.Start();
             process.BeginOutputReadLine();
-            process.WaitForExit();
+            while (!process.WaitForExit(1))
+            {
+                if (token.IsCancellationRequested)
+                {
+                    process.Kill();
+                    return false;
+                }
+            }
             return process.ExitCode == 0;
         }
 

@@ -34,10 +34,26 @@ namespace WaterWorker
             return intersections % 2 == 1;
         }
 
+        public KDTree<double, XYZ> ringsTree;
+
         public double Top => rings.Max(r => r.Top);
         public double Bottom => rings.Min(r => r.Bottom);
         public double Left => rings.Min(r => r.Left);
         public double Right => rings.Max(r => r.Right);
+
+        public void AssignHeghts()
+        {
+            var treeData = allPoints.Values.Select(p => new double[] { p.x, p.y, p.z }).ToArray();
+            KDTree<double, XYZ> tree = new KDTree<double, XYZ>(3, treeData, allPoints.Values.ToArray(), Loader.L2Norm);
+
+            foreach (var ring in rings)
+            {
+                ring.AssignHeights(tree);
+            }
+
+            treeData = rings.SelectMany(r => r.Points).Select(p => new double[] { p.x, p.y }).ToArray();
+            ringsTree = new KDTree<double, XYZ>(2, treeData, rings.SelectMany(r => r.Points).ToArray(), Loader.L2Norm);
+        }
 
         internal double DistanceFromCoast(XYZ point)
         {
@@ -54,7 +70,6 @@ namespace WaterWorker
             return points.Values.All(p => p.DistanceTo(point) > spacing);
         }
 
-
         public List<XYZ> GetGrid(double spacing, double xmin, double ymin, double xmax, double ymax)
         {
             if (points.Count == 0) return new List<XYZ>();
@@ -63,9 +78,9 @@ namespace WaterWorker
 
             //double elevation = points.Select(p => p.Value.z).Average();
 
-            double elevation;
+            /*double elevation;
             if (points.Count > 0) elevation = points.Select(p => p.Value.z).Average();
-            else elevation = allPoints.Select(p => p.Value.z).Min();
+            else elevation = allPoints.Select(p => p.Value.z).Min();*/
 
             Random r = new Random();
             List<XYZ> grid = new List<XYZ>();
@@ -73,7 +88,7 @@ namespace WaterWorker
             {
                 for (double y = Math.Max(Bottom, ymin); y <= Math.Min(Top, ymax); y += spacing)
                 {
-                    XYZ point = new XYZ() { x = x, y = y, z = elevation };
+                    XYZ point = new XYZ() { x = x, y = y };
                     if (InPolygon(point))
                     {
                         var nearestPoints = tree.NearestNeighbors(new double[] { x, y }, 1);
@@ -82,6 +97,10 @@ namespace WaterWorker
                         {
                             point.x += ((r.NextDouble() * spacing) - (spacing / 2))*0.5;
                             point.y += ((r.NextDouble() * spacing) - (spacing / 2))*0.5;
+
+                            var nearestRing = ringsTree.NearestNeighbors(new double[] { x, y }, 3);
+                            point.z = nearestRing.Select(p => p.Item2.z).Average();
+
                             //point.z = nearestPoints.Select(p => p.Item2.z).Average();
                             grid.Add(point);
                         }

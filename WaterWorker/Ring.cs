@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Supercluster.KDTree;
+using Xunit;
 
 namespace WaterWorker
 {
@@ -16,41 +18,14 @@ namespace WaterWorker
         }
     }
 
-    class Segment
-    {
-        public XYZ p1, p2;
-
-        public Segment(XYZ p1, XYZ p2)
-        {
-            this.p1 = p1;
-            this.p2 = p2;
-        }
-
-        double width => Math.Abs(p2.x - p1.x);
-        double height => Math.Abs(p2.y - p1.y);
-
-        double Left => Math.Min(p1.x, p2.x);
-
-        double Bottom => Math.Min(p1.y, p2.y);
-
-        public bool Croses(XYZ point)
-        {
-            if (p1.x < point.x && p2.x < point.x) return false;
-            if (p1.y < point.y && p2.y < point.y) return false;
-            if (p1.y > point.y && p2.y > point.y) return false;
-            double i = ((point.y - Bottom) / height) * width + Left;
-            return i >= point.y;
-        }
-    }
-
     class Ring
     {
-        List<XYZ> points;
+        public List<XYZ> Points { get; }
         List<Segment> segments;
         
         public Ring(Newtonsoft.Json.Linq.JToken ring)
         {
-            points = new List<XYZ>();
+            Points = new List<XYZ>();
             foreach (var point in ring.Children())
             {
                 double x = point.First.ToObject<double>();
@@ -59,20 +34,31 @@ namespace WaterWorker
                 if (x < Left) Left = x;
                 if (y > Top) Top = y;
                 if (y < Bottom) Bottom = y;
-                points.Add(new XYZ() { x = x, y = y });
+                Points.Add(new XYZ() { x = x, y = y });
             }
             segments = new List<Segment>();
-            for (int i = 0; i < points.Count; i++)
+            for (int i = 0; i < Points.Count; i++)
             {
-                var p1 = points[i];
-                var p2 = points[(i + 1) % points.Count];
+                var p1 = Points[i];
+                var p2 = Points[(i + 1) % Points.Count];
                 segments.Add(new Segment(p1, p2));
+            }
+        }
+
+        internal void AssignHeights(KDTree<double, XYZ> tree)
+        {
+            foreach (var point in Points)
+            {
+                var pointArray = new double[] { point.x, point.y, point.z };
+                var nearset = tree.NearestNeighbors(pointArray, 20);
+                var height = nearset.Average(x => x.Item2.z);
+                point.z = height;
             }
         }
 
         internal bool IsOnWater(XYZ point, double offset)
         {
-            return points.TrueForAll(r => r.DistanceTo(point) > offset);
+            return Points.TrueForAll(r => r.DistanceTo(point) > offset);
         }
 
         public double Top = double.MinValue;
@@ -88,7 +74,7 @@ namespace WaterWorker
 
         internal double DistanceFromCoast(XYZ point)
         {
-            return points.Select(p => p.DistanceTo(point)).Min();
+            return Points.Select(p => p.DistanceTo(point)).Min();
         }
     }
 }

@@ -66,8 +66,8 @@ namespace ColorWorker
                 int i = (pxCoordinates[0] - _bottomLeftX) * 2;
                 int j = img.Height - 1 - ((pxCoordinates[1] - _bottomLeftY) * 2);//j index of image goes from top to bottom
 
-                i = Math.Min(Math.Max(i, img.Width - 1), 0);
-                j = Math.Min(Math.Max(j, img.Height - 1), 0);
+                i = Math.Max(Math.Min(i, img.Width - 1), 0);
+                j = Math.Max(Math.Min(j, img.Height - 1), 0);
 
                 Color color = img.GetPixel(i, j); //binary int value						
                 lazReader.point.rgb = new[] {
@@ -134,7 +134,7 @@ namespace ColorWorker
 
             Console.WriteLine("[{0:hh:mm:ss}] Downloading image with web client...", DateTime.Now);
 
-            string remoteUri = "http://gis.arso.gov.si/arcgis/rest/services/DOF_2016/MapServer/export" +
+            /*string remoteUri = "http://gis.arso.gov.si/arcgis/rest/services/DOF_2016/MapServer/export" +
                                                 $"?bbox={minX}%2C{minY}%2C{maxX}%2C{maxY}&bboxSR=&layers=&layerDefs=" +
                                                 $"&size={OrtoPhotoImgSize}%2C{OrtoPhotoImgSize}&imageSR=&format=png" +
                                                 "&transparent=false&dpi=&time=&layerTimeOptions=" +
@@ -144,8 +144,8 @@ namespace ColorWorker
             WebClient myWebClient = new WebClient();
             myWebClient.DownloadFile(remoteUri, fileName);
 
-            return (Bitmap)Image.FromFile(fileName);
-            /*
+            return (Bitmap)Image.FromFile(fileName);*/
+            
             var request = WebRequest.CreateHttp("http://gis.arso.gov.si/arcgis/rest/services/DOF_2016/MapServer/export" +
                                                 $"?bbox={minX}%2C{minY}%2C{maxX}%2C{maxY}&bboxSR=&layers=&layerDefs=" +
                                                 $"&size={OrtoPhotoImgSize}%2C{OrtoPhotoImgSize}&imageSR=&format=png" +
@@ -154,7 +154,7 @@ namespace ColorWorker
             WebResponse response = request.GetResponse();
             Stream responseStream = response.GetResponseStream();
             //Console.WriteLine("[DONE]");
-            return new Bitmap(responseStream?? throw new Exception());*/
+            return new Bitmap(responseStream?? throw new Exception());
         }
     }
 }

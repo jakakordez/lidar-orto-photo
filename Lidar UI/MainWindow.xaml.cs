@@ -152,5 +152,10 @@ namespace Lidar_UI
             MunicipalitiesView v = new MunicipalitiesView(repository);
             v.Show();
         }
+
+        private void Window_Closing(object sender, CancelEventArgs e)
+        {
+            jobRunner.Close();
+        }
     }
 }

@@ -60,7 +60,7 @@ namespace WaterWorker
                 lazReader.laszip_read_point();
                 lazReader.laszip_get_coordinates(coordArray);
                 lazWriter.point = lazReader.point;
-
+                //if (lazWriter.point.classification > 9) System.Diagnostics.Debugger.Break();
                 if(pointcloud.ContainsKey(pointIndex)) lazWriter.point.classification = WATER_CLASSIFICATION;
 
                 lazWriter.laszip_write_point();
@@ -70,6 +70,7 @@ namespace WaterWorker
             foreach (var gridPoint in newPoints)
             {
                 lazWriter.point.classification = 9;
+                lazWriter.point.point_source_ID = 1234;
                 coordArray[0] = gridPoint.x;
                 coordArray[1] = gridPoint.y;
                 coordArray[2] = gridPoint.z;
@@ -80,7 +81,6 @@ namespace WaterWorker
             lazWriter.laszip_close_writer();
         }
 
-        KDTree<double, XYZ> tree;
         public static Func<double[], double[], double> L2Norm = (x, y) =>
         {
             double dist = 0;
@@ -91,6 +91,7 @@ namespace WaterWorker
 
             return dist;
         };
+
         public const int GROUND_CLASSIFICATION = 2;
         public const int WATER_CLASSIFICATION = 9;
         void LoadPointcloud()
@@ -117,7 +118,9 @@ namespace WaterWorker
                             polygon.points[pointIndex] = point;
                             pointcloud[pointIndex] = point;
                         }
-                        polygon.allPoints[pointIndex] = point;
+                        if(lazReader.point.classification == GROUND_CLASSIFICATION
+                            || lazReader.point.classification == WATER_CLASSIFICATION)
+                            polygon.allPoints[pointIndex] = point;
                         break;
                     }
                 }
@@ -128,21 +131,24 @@ namespace WaterWorker
                 if (polygon.allPoints.Count == 0) continue;
                 //var treeData = polygon.allPoints.Values.Select(p => new double[] { p.x, p.y }).ToArray();
                 //KDTree<double, XYZ> tree = new KDTree<double, XYZ>(2, treeData, polygon.allPoints.Values.ToArray(), L2Norm);
-                double elevation;
+                polygon.AssignHeghts();
+                /*double elevation;
                 if (polygon.points.Count > 0) elevation = polygon.points.Select(p => p.Value.z).Average();
-                else elevation = polygon.allPoints.Select(p => p.Value.z).Min();
+                else elevation = polygon.allPoints.Select(p => p.Value.z).Min();*/
 
                 foreach (var point in polygon.allPoints)
                 {
                     if (!pointcloud.ContainsKey(point.Key) /*&&
                         polygon.IsOnWater(point.Value, 15)*/)
                     {
-
                         /*var nearestPoints = tree.NearestNeighbors(
                             new double[] { point.Value.x, point.Value.y }, 100);
                         var z = nearestPoints.Min(p => p.Item2.z);
                         */
-                        if (point.Value.z < elevation + 1.0)
+                        var nearest = polygon.ringsTree.NearestNeighbors(new double[] { point.Value.x, point.Value.y}, 3);
+                        var elevation = nearest.Select(p => p.Item2.z).Average();
+                        if (point.Value.z < elevation + 2.0
+                            && polygon.IsOnWater(point.Value, 15))
                         {
                             polygon.points[point.Key] = point.Value;
                             pointcloud[point.Key] = point.Value;

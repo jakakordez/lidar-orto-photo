@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
@@ -25,11 +26,13 @@ namespace Lidar_UI
 
         public event EventHandler<Job> JobStarted;
         public event EventHandler<Job> JobFinished;
+        CancellationTokenSource cancellationSource;
 
         public static bool download, color, normals, water;
 
         public async Task RunArea(int x1, int y1, int x2, int y2)
         {
+            cancellationSource = new CancellationTokenSource();
             jobs = new ObservableCollection<Job>();
             Dictionary<TileId, Tile> tiles = new Dictionary<TileId, Tile>();
             for(int x = x1; x <= x2; x++)
@@ -53,19 +56,20 @@ namespace Lidar_UI
             BufferBlock<Tile> waitingQueue = new BufferBlock<Tile>(new DataflowBlockOptions() {
                 EnsureOrdered = true
             });
-
+            
             TransformBlock<Tile, Tile> workerBlock = new TransformBlock<Tile, Tile>(async t =>
             {
                 t.Rescan(repository.DirectoryForTile(t.id));
                 var job = Job.NextJob(t);
                 if (job == null) return t;
                 JobStarted.Invoke(this, job);
-                await job.Run(Cleanup);
+                await job.Run(cancellationSource.Token, Cleanup);
                 t.Rescan(repository.DirectoryForTile(t.id));
                 JobFinished.Invoke(this, job);
                 return t;
             }, new ExecutionDataflowBlockOptions()
             {
+                CancellationToken = cancellationSource.Token,
                 MaxDegreeOfParallelism = workers,
             });
 
@@ -91,6 +95,12 @@ namespace Lidar_UI
             }
 
             await finishTask.Task;
+        }
+
+        internal void Close()
+        {
+            cancellationSource?.Cancel();
+            Thread.Sleep(100);
         }
     }
 }

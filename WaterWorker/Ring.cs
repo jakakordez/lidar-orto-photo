@@ -16,6 +16,11 @@ namespace WaterWorker
         {
             return (Math.Sqrt(Math.Pow(Math.Abs(x - point.x), 2) + Math.Pow(Math.Abs(y - point.y), 2)));
         }
+
+        public override string ToString()
+        {
+            return x + " " + y + " " + z;
+        }
     }
 
     class Ring

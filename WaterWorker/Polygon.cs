@@ -15,6 +15,12 @@ namespace WaterWorker
         public Dictionary<int, XYZ> points = new Dictionary<int, XYZ>();
         public Dictionary<int, XYZ> allPoints = new Dictionary<int, XYZ>();
 
+
+        public override string ToString()
+        {
+            return geographical_name + " " + id;
+        }
+
         public Polygon(Newtonsoft.Json.Linq.JToken entity)
         {
             rings = new List<Ring>();
@@ -72,9 +78,11 @@ namespace WaterWorker
 
         public List<XYZ> GetGrid(double spacing, double xmin, double ymin, double xmax, double ymax)
         {
-            if (points.Count == 0) return new List<XYZ>();
+            //if (points.Count == 0) return new List<XYZ>();
             var treeData = points.Values.Select(p => new double[] { p.x, p.y }).ToArray();
-            KDTree<double, XYZ> tree = new KDTree<double, XYZ>(2, treeData, points.Values.ToArray(), Loader.L2Norm);
+            KDTree<double, XYZ> tree = null;
+            if (points.Count > 0)
+                tree = new KDTree<double, XYZ>(2, treeData, points.Values.ToArray(), Loader.L2Norm);
 
             //double elevation = points.Select(p => p.Value.z).Average();
 
@@ -91,9 +99,16 @@ namespace WaterWorker
                     XYZ point = new XYZ() { x = x, y = y };
                     if (InPolygon(point))
                     {
-                        var nearestPoints = tree.NearestNeighbors(new double[] { x, y }, 1);
-                        var nearest = nearestPoints[0].Item2;
-                        if (point.DistanceTo(nearest) > spacing)
+                        bool hasToBeAdded = false;
+                        if (points.Count > 0)
+                        {
+                            var nearestPoints = tree.NearestNeighbors(new double[] { x, y }, 1);
+                            var nearest = nearestPoints[0].Item2;
+                            hasToBeAdded = point.DistanceTo(nearest) > spacing;
+                        }
+                        else hasToBeAdded = true;
+                            
+                        if (hasToBeAdded)
                         {
                             point.x += ((r.NextDouble() * spacing) - (spacing / 2))*0.5;
                             point.y += ((r.NextDouble() * spacing) - (spacing / 2))*0.5;
@@ -110,4 +125,5 @@ namespace WaterWorker
             return grid;
         }
     }
+
 }

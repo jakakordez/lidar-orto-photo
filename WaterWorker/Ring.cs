@@ -21,6 +21,42 @@ namespace WaterWorker
         {
             return x + " " + y + " " + z;
         }
+        
+        public double DistanceSquared(XYZ point)
+        {
+            return Math.Pow(Math.Abs(x - point.x), 2) + Math.Pow(Math.Abs(y - point.y), 2);
+        }
+
+        public static XYZ operator - (XYZ p1, XYZ p2)
+        {
+            return new XYZ() { x = p2.x - p1.x, y = p2.y - p1.y, z = p2.z - p1.z };
+        }
+
+        public static XYZ operator +(XYZ p1, XYZ p2)
+        {
+            return new XYZ() { x = p2.x + p1.x, y = p2.y + p1.y, z = p2.z + p1.z };
+        }
+
+        public static XYZ operator *(double d, XYZ p1)
+        {
+            p1.x *= d;
+            p1.y *= d;
+            p1.z *= d;
+            return p1;
+        }
+
+        public static XYZ operator /(XYZ p1, double d)
+        {
+            p1.x /= d;
+            p1.y /= d;
+            p1.z /= d;
+            return p1;
+        }
+
+        public static double operator *(XYZ p1, XYZ p2)
+        {
+            return p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
+        }
     }
 
     class Ring
@@ -79,7 +115,8 @@ namespace WaterWorker
 
         internal double DistanceFromCoast(XYZ point)
         {
-            return Points.Select(p => p.DistanceTo(point)).Min();
+            return segments.Select(s => s.DistanceTo(point)).Min();
+            //return Points.Select(p => p.DistanceTo(point)).Min();
         }
     }
 }

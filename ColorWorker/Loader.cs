@@ -30,8 +30,7 @@ namespace ColorWorker
             var compressed = true;
             var filePath = ResourceDirectoryPath + "/5-" + x + "-" + y + ".laz";
 
-            lazReader.laszip_open_reader(filePath, ref compressed);
-            var numberOfPoints = lazReader.header.number_of_point_records;
+            
             //var kdTree = new KDTree(3);
             Bitmap img = null;
             for (int i = 0; i < 4; i++)
@@ -46,6 +45,9 @@ namespace ColorWorker
                 }
             }
             if (img == null) throw new Exception();
+
+            lazReader.laszip_open_reader(filePath, ref compressed);
+            var numberOfPoints = lazReader.header.number_of_point_records;
 
             Console.WriteLine("[{0:hh:mm:ss}] Reading and writing LAZ...", DateTime.Now);
             lazReader.laszip_seek_point(0L);//read from the beginning again

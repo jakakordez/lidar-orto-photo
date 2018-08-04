@@ -39,6 +39,19 @@ namespace WaterWorker
             else i = Right - i;
             return i >= point.x;
         }
+
+        internal double DistanceTo(XYZ point)
+        {
+            double l2 = p1.DistanceSquared(p2);  // i.e. |w-v|^2 -  avoid a sqrt
+            if (l2 == 0.0) return p1.DistanceTo(point);   // v == w case
+                                                    // Consider the line extending the segment, parameterized as v + t (w - v).
+                                                    // We find projection of point p onto the line. 
+                                                    // It falls where t = [(p-v) . (w-v)] / |w-v|^2
+                                                    // We clamp t from [0,1] to handle points outside the segment vw.
+            double t = Math.Max(0, Math.Min(1, ((point - p1) * (p2 - p1)) / l2));
+            XYZ projection = p1 + t * (p2 - p1);  // Projection falls on the segment
+            return projection.DistanceTo(point);
+        }
     }
 
     public class SegmentTests

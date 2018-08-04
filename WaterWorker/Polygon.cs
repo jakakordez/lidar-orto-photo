@@ -10,7 +10,7 @@ namespace WaterWorker
     class Polygon
     {
         string geographical_name;
-        List<Ring> rings;
+        public List<Ring> rings;
         int id;
         public Dictionary<int, XYZ> points = new Dictionary<int, XYZ>();
         public Dictionary<int, XYZ> allPoints = new Dictionary<int, XYZ>();
@@ -49,8 +49,13 @@ namespace WaterWorker
 
         public void AssignHeghts()
         {
-            var treeData = allPoints.Values.Select(p => new double[] { p.x, p.y, p.z }).ToArray();
-            KDTree<double, XYZ> tree = new KDTree<double, XYZ>(3, treeData, allPoints.Values.ToArray(), Loader.L2Norm);
+            AssignHeghts(allPoints.Values);
+        }
+
+        public void AssignHeghts(IEnumerable<XYZ>  allPoints)
+        {
+            var treeData = allPoints.Select(p => new double[] { p.x, p.y, p.z }).ToArray();
+            KDTree<double, XYZ> tree = new KDTree<double, XYZ>(3, treeData, allPoints.ToArray(), Loader.L2Norm);
 
             foreach (var ring in rings)
             {

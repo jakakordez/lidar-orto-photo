@@ -113,7 +113,7 @@ namespace WaterWorker
                 XYZ point = new XYZ() { x = coordArray[0], y = coordArray[1], z = coordArray[2] };
                 foreach (var polygon in polygons)
                 {
-                    if (polygon.InPolygon(point)) {
+                    if (polygon.InPolygon(point) || polygon.DistanceFromCoast(point) < 5) {
                         if (lazReader.point.classification == WATER_CLASSIFICATION) {
                             polygon.points[pointIndex] = point;
                             pointcloud[pointIndex] = point;
@@ -126,9 +126,8 @@ namespace WaterWorker
                 }
             }
 
-            foreach (var polygon in polygons)
+            foreach (var polygon in polygons.Where(p => p.allPoints.Count > 0))
             {
-                if (polygon.allPoints.Count == 0) continue;
                 //var treeData = polygon.allPoints.Values.Select(p => new double[] { p.x, p.y }).ToArray();
                 //KDTree<double, XYZ> tree = new KDTree<double, XYZ>(2, treeData, polygon.allPoints.Values.ToArray(), L2Norm);
                 polygon.AssignHeghts();
@@ -155,6 +154,22 @@ namespace WaterWorker
                         }
                     }
                 }
+            }
+            var ringPoints = polygons
+                .Where(p => p.allPoints.Count > 0)
+                .SelectMany(p => p.rings)
+                .SelectMany(r => r.Points)
+                .ToArray();
+            if (ringPoints.Count() > 0)
+            {
+                foreach (var polygon in polygons.Where(p => p.allPoints.Count == 0))
+                {
+                    polygon.AssignHeghts(ringPoints);
+                }
+            }
+            else
+            {
+                throw new Exception("No points to determine ring heights!");
             }
         }
 

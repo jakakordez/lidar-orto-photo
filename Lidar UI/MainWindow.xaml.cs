@@ -38,7 +38,8 @@ namespace Lidar_UI
             
             repository = new Repository();
             mapView.Load(repository);
-            var dir = new DirectoryInfo(System.IO.Path.Combine(Directory.GetCurrentDirectory(), "repository"));
+            //var dir = new DirectoryInfo(System.IO.Path.Combine(Directory.GetCurrentDirectory(), "repository"));
+            var dir = new DirectoryInfo(@"D:\lidar");
             repository.Load(dir);
             txtPath.Text = dir.FullName;
             SlovenianMapBounds.CopyTo(bounds, 0);

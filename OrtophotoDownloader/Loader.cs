@@ -2,10 +2,9 @@
 using System.Drawing;
 using System.IO;
 using System.Net;
-using laszip.net;
 using Point = System.Windows.Point;
 
-namespace ColorWorker
+namespace OrtophotoDownloader
 {
     class Loader
     {
@@ -26,12 +25,8 @@ namespace ColorWorker
 
         public void Start()
         {
-            var lazReader = new laszip_dll();
-            var compressed = true;
-            var filePath = ResourceDirectoryPath + "/5-" + x + "-" + y + ".laz";
-
-            
-            //var kdTree = new KDTree(3);
+            string filename = x + "-" + y + ".png";
+            if (File.Exists(filename)) return;
             Bitmap img = null;
             for (int i = 0; i < 4; i++)
             {
@@ -40,48 +35,12 @@ namespace ColorWorker
                     img = GetOrthophotoImg();
                     break;
                 }
-                catch (Exception e){
+                catch (Exception e)
+                {
                     Console.WriteLine("[{0:hh:mm:ss}] Image download failed...", DateTime.Now);
                 }
             }
-            if (img == null) throw new Exception();
-
-            lazReader.laszip_open_reader(filePath, ref compressed);
-            var numberOfPoints = lazReader.header.number_of_point_records;
-
-            Console.WriteLine("[{0:hh:mm:ss}] Reading and writing LAZ...", DateTime.Now);
-            lazReader.laszip_seek_point(0L);//read from the beginning again
-            lazReader.laszip_open_reader(filePath, ref compressed);
-
-            var lazWriter = new laszip_dll();
-            lazWriter.header = lazReader.header;
-            lazWriter.laszip_open_writer(ResourceDirectoryPath + "/6-" + x + "-" + y + ".laz", true);
-
-            for (var pointIndex = 0; pointIndex < numberOfPoints; pointIndex++)
-            {
-                var coordArray = new double[3];
-                lazReader.laszip_read_point();
-                lazReader.laszip_get_coordinates(coordArray);
-                lazWriter.point = lazReader.point;
-
-                int[] pxCoordinates = FindClosestPxCoordinates(coordArray[0], coordArray[1]);
-                int i = (pxCoordinates[0] - _bottomLeftX) * 2;
-                int j = img.Height - 1 - ((pxCoordinates[1] - _bottomLeftY) * 2);//j index of image goes from top to bottom
-
-                i = Math.Max(Math.Min(i, img.Width - 1), 0);
-                j = Math.Max(Math.Min(j, img.Height - 1), 0);
-
-                Color color = img.GetPixel(i, j); //binary int value						
-                lazReader.point.rgb = new[] {
-                    (ushort) (color.R << 8),
-                    (ushort) (color.G << 8),
-                    (ushort) (color.B << 8),
-                    (ushort) 0
-                };
-                lazWriter.laszip_write_point();
-            }
-            lazReader.laszip_close_reader();
-            lazWriter.laszip_close_writer();
+            if (img != null) img.Save(filename);
         }
 
         private int[] FindClosestPxCoordinates(double x, double y)
@@ -91,7 +50,7 @@ namespace ColorWorker
             var decimalPartY = y - Math.Floor(y);
             x = decimalPartX >= 0 && decimalPartX < 0.5 ? (int)x : (int)x + 0.5; //0.0...0.49 -> 0.0	    
             y = decimalPartY >= 0 && decimalPartY < 0.5 ? (int)y : (int)y + 0.5; //0.5...0.99 -> 0.5
-            
+
             var p = new Point(x, y);
             var upperLeft = new Point((int)x, (int)y + 0.5);
             var upperRight = new Point((int)x + 0.5, (int)y + 0.5);
@@ -129,13 +88,6 @@ namespace ColorWorker
         //download and return Image created based on bounds -> _bottomLeftX, _bottomLeftY
         public Bitmap GetOrthophotoImg()
         {
-            string filename = _bottomLeftX + "-" + _bottomLeftY + ".png";
-            if (File.Exists(filename))
-            {
-                Console.WriteLine("[{0:hh:mm:ss}] Found local image...", DateTime.Now);
-                return new Bitmap(filename);
-            }
-
             double minX = _bottomLeftX;
             double minY = _bottomLeftY;
             double maxX = minX + 999.999999999;
@@ -154,7 +106,7 @@ namespace ColorWorker
             myWebClient.DownloadFile(remoteUri, fileName);
 
             return (Bitmap)Image.FromFile(fileName);*/
-            
+
             var request = WebRequest.CreateHttp("http://gis.arso.gov.si/arcgis/rest/services/DOF_2016/MapServer/export" +
                                                 $"?bbox={minX}%2C{minY}%2C{maxX}%2C{maxY}&bboxSR=&layers=&layerDefs=" +
                                                 $"&size={OrtoPhotoImgSize}%2C{OrtoPhotoImgSize}&imageSR=&format=png" +
@@ -163,7 +115,7 @@ namespace ColorWorker
             WebResponse response = request.GetResponse();
             Stream responseStream = response.GetResponseStream();
             //Console.WriteLine("[DONE]");
-            return new Bitmap(responseStream?? throw new Exception());
+            return new Bitmap(responseStream ?? throw new Exception());
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -18,10 +19,12 @@ namespace Lidar_UI
         Repository repository;
 
         public ObservableCollection<Job> jobs;
+        FileStream logFile;
 
         public JobRunner(Repository repository)
         {
             this.repository = repository;
+            logFile = new FileStream(repository.directory.FullName + "/pipeline.log", FileMode.Open);
         }
 
         public event EventHandler<Job> JobStarted;
@@ -70,6 +73,9 @@ namespace Lidar_UI
                 await job.Run(cancellationSource.Token, Cleanup);
                 t.Rescan(repository.DirectoryForTile(t.id));
                 JobFinished.Invoke(this, job);
+                byte[] csvLine = job.CsvBytes;
+                logFile.Write(csvLine, 0, csvLine.Length);
+                logFile.Flush();
                 return t;
             }, new ExecutionDataflowBlockOptions()
             {
@@ -103,6 +109,8 @@ namespace Lidar_UI
 
         internal void Close()
         {
+            logFile.Flush();
+            logFile.Close();
             cancellationSource?.Cancel();
             Thread.Sleep(100);
         }

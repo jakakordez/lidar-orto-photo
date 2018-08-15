@@ -168,5 +168,9 @@ namespace Lidar_UI
         public string StatusString => Enum.GetName(typeof(JobStatuses), Status);
 
         public string TileString => tile.id.ToString();
+
+        public string CsvLine => TileString + ";" + StatusString + ";" + Started + ";" + Finished + ";" + (Started - Finished).TotalSeconds+"\n";
+
+        public byte[] CsvBytes => Encoding.UTF8.GetBytes(CsvLine);
     }
 }

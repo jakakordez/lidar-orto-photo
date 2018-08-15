@@ -8,7 +8,8 @@
         Title="MainWindow" Height="600" Width="800" Closing="Window_Closing">
     <Grid>
         <local:MapView x:Name="mapView" Margin="515,59,10,10"/>
-        <Button x:Name="btnStart" Content="Start" HorizontalAlignment="Left" Height="51" Margin="145,3,0,0" VerticalAlignment="Top" Width="75" Click="BtnStart_Click"/>
+        <Button x:Name="btnStart" Content="Start" HorizontalAlignment="Left" Height="24" Margin="145,3,0,0" VerticalAlignment="Top" Width="75" Click="BtnStart_Click"/>
+        <Button x:Name="btnPause" Content="Pause" HorizontalAlignment="Left" Height="24" Margin="145,30,0,0" VerticalAlignment="Top" Width="75" Click="btnPause_Click"/>
         <TextBox x:Name="txtPath" Height="23" Margin="305,31,10,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top"/>
         <ListView x:Name="lstJobs" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,59,0,0" Height="400" Width="500" SelectionChanged="lstJobs_SelectionChanged" >
             <ListView.View>

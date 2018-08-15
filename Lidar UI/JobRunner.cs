@@ -11,7 +11,7 @@ namespace Lidar_UI
 {
     class JobRunner
     {
-        const int workers = 6;
+        const int workers = 8;
 
         public static bool Cleanup = false;
 
@@ -29,6 +29,10 @@ namespace Lidar_UI
         CancellationTokenSource cancellationSource;
 
         public static bool download, color, normals, water;
+
+        IDisposable link;
+        TransformBlock<Tile, Tile> workerBlock;
+        BufferBlock<Tile> waitingQueue;
 
         public async Task RunArea(int x1, int y1, int x2, int y2)
         {
@@ -53,11 +57,11 @@ namespace Lidar_UI
                 }
             }
 
-            BufferBlock<Tile> waitingQueue = new BufferBlock<Tile>(new DataflowBlockOptions() {
+            waitingQueue = new BufferBlock<Tile>(new DataflowBlockOptions() {
                 EnsureOrdered = true
             });
             
-            TransformBlock<Tile, Tile> workerBlock = new TransformBlock<Tile, Tile>(async t =>
+            workerBlock = new TransformBlock<Tile, Tile>(async t =>
             {
                 t.Rescan(repository.DirectoryForTile(t.id));
                 var job = Job.NextJob(t);
@@ -85,7 +89,7 @@ namespace Lidar_UI
             });
 
             waitingQueue.LinkTo(workerBlock);
-            workerBlock.LinkTo(waitingQueue, t => Job.NextJob(t) != null);
+            link = workerBlock.LinkTo(waitingQueue, t => Job.NextJob(t) != null);
             workerBlock.LinkTo(tileFinished, t => Job.NextJob(t) == null);
             //workerBlock.LinkTo(mapUpdater);
 
@@ -101,6 +105,22 @@ namespace Lidar_UI
         {
             cancellationSource?.Cancel();
             Thread.Sleep(100);
+        }
+
+        internal string TogglePause()
+        {
+            if (workerBlock == null || waitingQueue == null) return "";
+            if (link == null)
+            {
+                link = workerBlock.LinkTo(waitingQueue, t => Job.NextJob(t) != null);
+                return "Pause";
+            }
+            else
+            {
+                link.Dispose();
+                link = null;
+                return "Resume";
+            }
         }
     }
 }

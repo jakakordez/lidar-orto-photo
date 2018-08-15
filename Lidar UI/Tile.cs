@@ -74,15 +74,15 @@ namespace Lidar_UI
 
         public Color TileColor => (new Color[] {
             Colors.DarkGray,
-            Colors.DarkBlue,
+            Colors.Black,
             Colors.Red,
-            Color.FromRgb(120, 68, 62),
-            Color.FromRgb(196, 67, 55),
-            Color.FromRgb(238, 142, 81),
-            Color.FromRgb(237, 190 ,86),
-            Color.FromRgb(242, 221, 119),
-            Color.FromRgb(210, 226, 90),
-            Color.FromRgb(150, 205, 83),
+            Color.FromRgb(254, 80, 0),
+            Color.FromRgb(254, 155, 0),
+            Color.FromRgb(254, 216, 0),
+            Color.FromRgb(216, 234, 0),
+            Color.FromRgb(165, 200, 0),
+            Color.FromRgb(96, 176, 0),
+            Color.FromRgb(0, 130, 0),
         })[(int)Stage];
 
         public Stages Stage => Files.Keys.Count > 0 ? Files.Keys.Max() : Stages.Unknown;

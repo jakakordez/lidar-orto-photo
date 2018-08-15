@@ -26,9 +26,18 @@ namespace WaterWorker
 
         List<Polygon> polygons;
 
+        string sourcePath => ResourceDirectoryPath + "/3-" + x + "-" + y + ".laz";
+        string destPath => ResourceDirectoryPath + "/4-" + x + "-" + y + ".laz";
+
         public void Start()
         {
             LoadJson();
+            if(polygons.Count == 0)
+            {
+                Console.WriteLine("[{0:hh:mm:ss}] No water on this tile", DateTime.Now);
+                System.IO.File.Copy(sourcePath, destPath);
+                return;
+            }
             LoadPointcloud();
             WritePointcloud();
         }
@@ -52,7 +61,7 @@ namespace WaterWorker
             lazWriter.header = lazReader.header;
 
             lazWriter.header.number_of_point_records += (uint)newPoints.Count;
-            lazWriter.laszip_open_writer(ResourceDirectoryPath + "/4-" + x + "-" + y + ".laz", true);
+            lazWriter.laszip_open_writer(destPath, true);
 
             var coordArray = new double[3];
             for (var pointIndex = 0; pointIndex < numberOfPoints; pointIndex++)
@@ -100,13 +109,16 @@ namespace WaterWorker
             pointcloud = new Dictionary<int, XYZ>();
             lazReader = new laszip_dll();
             var compressed = true;
-            var filePath = ResourceDirectoryPath + "/3-" + x + "-" + y + ".laz";
 
-            lazReader.laszip_open_reader(filePath, ref compressed);
+            lazReader.laszip_open_reader(sourcePath, ref compressed);
             numberOfPoints = lazReader.header.number_of_point_records;
+
+            Console.WriteLine("[{0:hh:mm:ss}] Total: {1} mio points", DateTime.Now, Math.Round(numberOfPoints/1000000.0, 2));
 
             for (var pointIndex = 0; pointIndex < numberOfPoints; pointIndex++)
             {
+                if(pointIndex%1000000 == 0 && pointIndex > 0)
+                    Console.WriteLine("[{0:hh:mm:ss}] {1} mio points processed", DateTime.Now, pointIndex/1000000);
                 var coordArray = new double[3];
                 lazReader.laszip_read_point();
                 lazReader.laszip_get_coordinates(coordArray);

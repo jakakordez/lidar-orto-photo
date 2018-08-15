@@ -129,12 +129,13 @@ namespace ColorWorker
         //download and return Image created based on bounds -> _bottomLeftX, _bottomLeftY
         public Bitmap GetOrthophotoImg()
         {
-            string filename = _bottomLeftX + "-" + _bottomLeftY + ".png";
+            string filename = x + "-" + y + ".png";
             if (File.Exists(filename))
             {
                 Console.WriteLine("[{0:hh:mm:ss}] Found local image...", DateTime.Now);
                 return new Bitmap(filename);
             }
+            else Console.WriteLine("[{0:hh:mm:ss}] Image with filename " + filename + " not found", DateTime.Now);
 
             double minX = _bottomLeftX;
             double minY = _bottomLeftY;

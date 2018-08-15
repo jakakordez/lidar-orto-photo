@@ -38,8 +38,8 @@ namespace Lidar_UI
             
             repository = new Repository();
             mapView.Load(repository);
-            //var dir = new DirectoryInfo(System.IO.Path.Combine(Directory.GetCurrentDirectory(), "repository"));
-            var dir = new DirectoryInfo(@"D:\lidar");
+            var dir = new DirectoryInfo(System.IO.Path.Combine(Directory.GetCurrentDirectory(), "repository"));
+            //var dir = new DirectoryInfo(@"D:\lidar");
             repository.Load(dir);
             txtPath.Text = dir.FullName;
             SlovenianMapBounds.CopyTo(bounds, 0);
@@ -73,29 +73,23 @@ namespace Lidar_UI
 
         private async void BtnStart_Click(object sender, RoutedEventArgs e)
         {
+            btnPause.Content = "Pause";
             btnStart.Content = "Stop";
-            chkNormals.IsEnabled = false;
-            txtPath.IsEnabled = false;
-            txtLeft.IsEnabled = false;
-            txtBottom.IsEnabled = false;
-            txtRight.IsEnabled = false;
-            txtTop.IsEnabled = false;
-            btnStart.IsEnabled = false;
-
+            List<System.Windows.Controls.Control> controls = new List<System.Windows.Controls.Control>()
+            {
+                chkDownload, chkColor, chkNormals, chkWater, chkCleanup,
+                txtPath, txtLeft, txtBottom, txtRight, txtTop, btnStart,
+            };
+            
             JobRunner.download = chkDownload.IsChecked ?? false;
             JobRunner.color = chkColor.IsChecked ?? false;
             JobRunner.normals = chkNormals.IsChecked ?? false;
             JobRunner.water = chkWater.IsChecked ?? false;
             JobRunner.Cleanup = chkCleanup.IsChecked ?? false;
+            controls.ForEach(c => c.IsEnabled = false);
             await jobRunner.RunArea(bounds[0], bounds[1], bounds[2], bounds[3]);
 
-            chkNormals.IsEnabled = true;
-            txtPath.IsEnabled = true;
-            txtLeft.IsEnabled = true;
-            txtBottom.IsEnabled = true;
-            txtRight.IsEnabled = true;
-            txtTop.IsEnabled = true;
-            btnStart.IsEnabled = true;
+            controls.ForEach(c => c.IsEnabled = true);
             btnStart.Content = "Start";
         }
 
@@ -157,6 +151,11 @@ namespace Lidar_UI
         private void Window_Closing(object sender, CancelEventArgs e)
         {
             jobRunner.Close();
+        }
+
+        private void btnPause_Click(object sender, RoutedEventArgs e)
+        {
+            btnPause.Content = jobRunner.TogglePause();
         }
     }
 }

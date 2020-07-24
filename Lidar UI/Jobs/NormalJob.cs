@@ -22,7 +22,7 @@ namespace Lidar_UI.Jobs
         {
             Process p = new Process();
             p.StartInfo.FileName = "NormalWorker/NormalCalculator.exe";
-            p.StartInfo.Arguments = "\"" + StartFile.Directory + "\" " + t.id.x + " " + t.id.y;
+            p.StartInfo.Arguments = "\"" + StartFile.Directory + "\" " + t.Id.X + " " + t.Id.Y;
             p.StartInfo.WorkingDirectory = "./NormalWorker/";
             return p;
         }

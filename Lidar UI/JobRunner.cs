@@ -12,19 +12,18 @@ namespace Lidar_UI
 {
     class JobRunner
     {
-        const int workers = 8;
+        const int workers = 6;
 
         public static bool Cleanup = false;
 
         Repository repository;
 
         public ObservableCollection<Job> jobs;
-        FileStream logFile;
 
         public JobRunner(Repository repository)
         {
             this.repository = repository;
-            logFile = new FileStream(repository.directory.FullName + "/pipeline.log", FileMode.Open);
+            
         }
 
         public event EventHandler<Job> JobStarted;
@@ -37,7 +36,7 @@ namespace Lidar_UI
         TransformBlock<Tile, Tile> workerBlock;
         BufferBlock<Tile> waitingQueue;
 
-        public async Task RunArea(int x1, int y1, int x2, int y2)
+        public async Task RunArea(int x1, int y1, int x2, int y2, Municipality m)
         {
             cancellationSource = new CancellationTokenSource();
             jobs = new ObservableCollection<Job>();
@@ -47,6 +46,7 @@ namespace Lidar_UI
                 for(int y = y1; y <= y2; y++)
                 {
                     TileId id = new TileId(x, y);
+                    if (repository.Municipalities.map[id] != m.Id) continue;
                     if (repository.Tiles.ContainsKey(id))
                     {
                         tiles[id] = repository.Tiles[id];
@@ -66,16 +66,16 @@ namespace Lidar_UI
             
             workerBlock = new TransformBlock<Tile, Tile>(async t =>
             {
-                t.Rescan(repository.DirectoryForTile(t.id));
+                t.Rescan(repository.DirectoryForTile(t.Id));
                 var job = Job.NextJob(t);
                 if (job == null) return t;
                 JobStarted.Invoke(this, job);
                 await job.Run(cancellationSource.Token, Cleanup);
-                t.Rescan(repository.DirectoryForTile(t.id));
+                t.Rescan(repository.DirectoryForTile(t.Id));
                 JobFinished.Invoke(this, job);
                 byte[] csvLine = job.CsvBytes;
-                logFile.Write(csvLine, 0, csvLine.Length);
-                logFile.Flush();
+                repository.logFile.Write(csvLine, 0, csvLine.Length);
+                repository.logFile.Flush();
                 return t;
             }, new ExecutionDataflowBlockOptions()
             {
@@ -109,8 +109,8 @@ namespace Lidar_UI
 
         internal void Close()
         {
-            logFile.Flush();
-            logFile.Close();
+            repository.logFile.Flush();
+            repository.logFile.Close();
             cancellationSource?.Cancel();
             Thread.Sleep(100);
         }

@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+using System.Windows.Media;
 using static Lidar_UI.Tile;
 
 namespace Lidar_UI
@@ -22,9 +23,11 @@ namespace Lidar_UI
             FAILED
         }
 
-        public abstract Stages Start { get;  }
+        public abstract Stages Start { get; }
         public abstract Stages Progress { get; }
         public abstract Stages End { get; }
+
+        public System.Drawing.Color Brush => System.Drawing.Color.Red;
 
         public JobStatuses Status {
             get {
@@ -38,11 +41,11 @@ namespace Lidar_UI
             }
         }
 
-        public Tile tile;
+        public Tile Tile;
 
-        public FileInfo StartFile => tile.Files[Start];
-        public FileInfo ProgressFile => tile.Files[Progress];
-        public FileInfo EndFile => tile.Files[End];
+        public FileInfo StartFile => Tile.Files[Start];
+        public FileInfo ProgressFile => Tile.Files[Progress];
+        public FileInfo EndFile => Tile.Files[End];
 
         private Process process;
 
@@ -51,7 +54,7 @@ namespace Lidar_UI
 
         public Job(Tile tile)
         {
-            this.tile = tile;
+            this.Tile = tile;
         }
 
         public Task Run(CancellationToken token, bool cleanup = false)
@@ -61,13 +64,13 @@ namespace Lidar_UI
             Finished = DateTime.MinValue;
             return Task.Run(() =>
             {
-                string filename = tile.id.GetFilename(Progress);
-                FileInfo progressFile = new FileInfo(Path.Combine(StartFile.DirectoryName, tile.id.GetFilename(Progress)));
-                bool result = RunProcess(tile, token);
+                string filename = Tile.Id.GetFilename(Progress);
+                FileInfo progressFile = new FileInfo(Path.Combine(StartFile.DirectoryName, Tile.Id.GetFilename(Progress)));
+                bool result = RunProcess(Tile, token);
                 if (result)
                 {
-                    tile.FailedCount = 0;
-                    string newFilename = Path.Combine(StartFile.DirectoryName, tile.id.GetFilename(End));
+                    Tile.FailedCount = 0;
+                    string newFilename = Path.Combine(StartFile.DirectoryName, Tile.Id.GetFilename(End));
                     if (progressFile.Exists)
                     {
                         progressFile.MoveTo(newFilename);
@@ -77,7 +80,7 @@ namespace Lidar_UI
                         if (StartFile.Exists && !IsFileLocked(StartFile)) StartFile.Delete();
                     }
                 }
-                else tile.FailedCount++;
+                else Tile.FailedCount++;
                 Finished = DateTime.Now;
             }, token);
         }
@@ -139,13 +142,13 @@ namespace Lidar_UI
             switch (tile.Stage)
             {
                 case Stages.Unknown:
-                    return JobRunner.download?new DownloadJob(tile):null;
+                    return JobRunner.download ? new DownloadJob(tile) : null;
                 case Stages.Downloaded:
-                    return JobRunner.water?new WaterJob(tile):null;
+                    return JobRunner.water ? new WaterJob(tile) : null;
                 case Stages.Water:
-                    return JobRunner.color?new ColorJob(tile):null;
+                    return JobRunner.color ? new ColorJob(tile) : null;
                 case Stages.Colors:
-                    return JobRunner.normals?new NormalJob(tile):null;
+                    return JobRunner.normals ? new NormalJob(tile) : null;
                 case Stages.Missing:
                 case Stages.Downloading:
                 case Stages.AddingWater:
@@ -161,15 +164,53 @@ namespace Lidar_UI
 
         public string StartedString => Started.ToString("dd.MM.yyyy HH:mm:ss");
 
-        public string FinishedString => 
-            Finished == DateTime.MinValue?
-                "":Finished.ToString("dd.MM.yyyy HH:mm:ss");
+        public string FinishedString =>
+            Finished == DateTime.MinValue ?
+                "" : Finished.ToString("dd.MM.yyyy HH:mm:ss");
 
-        public string StatusString => Enum.GetName(typeof(JobStatuses), Status);
+        public string StatusString
+        {
+            get
+            {
+                switch (Status)
+                {
+                    case JobStatuses.WAITING:
+                        return "⌛";
+                    case JobStatuses.RUNNING:
+                        return "⚙";
+                    case JobStatuses.FINISHED:
+                        return "✔";
+                    case JobStatuses.FAILED:
+                        return "❌";
+                    default:
+                        return "";
+                }
+            }
+        
+        }//Enum.GetName(typeof(JobStatuses), Status);
 
-        public string TileString => tile.id.ToString();
+        public Brush StatusColor
+        {
+            get
+            {
+                switch (Status)
+                {
+                    case JobStatuses.RUNNING:
+                        return Brushes.DarkBlue;
+                    case JobStatuses.FINISHED:
+                        return Brushes.DarkGreen;
+                    case JobStatuses.FAILED:
+                        return Brushes.Red;
+                    case JobStatuses.WAITING:
+                    default:
+                        return Brushes.Black;
+                }
+            }
+        }
 
-        public string CsvLine => TileString + ";" + StatusString + ";" + Started + ";" + Finished + ";" + (Started - Finished).TotalSeconds+"\n";
+        public string TileString => Tile.Id.ToString();
+
+        public string CsvLine => TileString + ";" + StatusString + ";" + Started + ";" + Finished + ";" + Math.Round((Finished - Started).TotalSeconds)+";"+TaskName+";\n";
 
         public byte[] CsvBytes => Encoding.UTF8.GetBytes(CsvLine);
     }

@@ -47,5 +47,10 @@ namespace Lidar_UI
             this.X = polygon.Average(p => p.X);
             this.Y = polygon.Average(p => p.Y);
         }
+
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }

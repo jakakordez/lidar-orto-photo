@@ -52,11 +52,5 @@
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\lidar-orto-photo\lidar-orto-photo.csproj">
-      <Project>{078d977d-6e85-4802-8669-855907bb5e96}</Project>
-      <Name>lidar-orto-photo</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

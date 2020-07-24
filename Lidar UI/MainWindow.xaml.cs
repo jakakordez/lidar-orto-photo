@@ -12,7 +12,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using lidar_orto_photo;
 using System.IO;
 using System.Threading;
 using System.Runtime.InteropServices;
@@ -31,16 +30,37 @@ namespace Lidar_UI
         int[] bounds = new int[4];
         Repository repository;
         JobRunner jobRunner;
+        TileId? selectedTile;
 
         public MainWindow()
         {
             InitializeComponent();
-            
-            repository = new Repository();
+        }
+
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            Hide();
+            repository = new Repository(cmbMunicipalities);
             mapView.Load(repository);
-            var dir = new DirectoryInfo(System.IO.Path.Combine(Directory.GetCurrentDirectory(), "repository"));
+
+            DirectoryInfo dir;
+            try
+            {
+                dir = new DirectoryInfo(Properties.Settings.Default.repositoryPath);
+                if (!dir.Exists) throw new Exception();
+            }
+            catch
+            {
+                Properties.Settings.Default.repositoryPath = System.IO.Path.Combine(Directory.GetCurrentDirectory(), "repository");
+                Properties.Settings.Default.Save();
+                dir = new DirectoryInfo(Properties.Settings.Default.repositoryPath);
+            }
             //var dir = new DirectoryInfo(@"D:\lidar");
-            repository.Load(dir);
+
+            LoadingWindow loader = new LoadingWindow(repository, dir);
+            loader.Show();
+            await loader.LoadingFinished.Task;
+
             txtPath.Text = dir.FullName;
             SlovenianMapBounds.CopyTo(bounds, 0);
             UpdateValues();
@@ -48,6 +68,33 @@ namespace Lidar_UI
             lstJobs.ItemsSource = jobRunner.jobs;
             jobRunner.JobFinished += JobRunner_JobFinished;
             jobRunner.JobStarted += JobRunner_JobStarted;
+            mapView.TileSelected += MapView_TileSelected;
+            mapView.TileClicked += MapView_TileClicked;
+            mapView.Unselected += MapView_Unselected;
+            Show();
+        }
+
+        private void MapView_Unselected(object sender, EventArgs e)
+        {
+            lstJobs.ItemsSource = jobRunner.jobs;
+            selectedTile = null;
+        }
+
+        private void MapView_TileClicked(TileId tileId)
+        {
+            if (jobRunner.jobs != null) lstJobs.ItemsSource = jobRunner.jobs.Where(j => j.Tile.Id.Equals(tileId));
+            selectedTile = tileId;
+        }
+
+        private void MapView_TileSelected(TileId tileId)
+        {
+            if (selectedTile == null)
+            {
+                var stage = "";
+                if (repository.Tiles.ContainsKey(tileId)) stage = Enum.GetName(typeof(Stages), repository.Tiles[tileId].Stage);
+                var municipality = repository.Municipalities.municipalities?[repository.Municipalities.map[tileId]];
+                lblTile.Content = tileId.X + " " + tileId.Y + " " + municipality?.Name + " (" + municipality?.Id + ") " + stage;
+            }
         }
 
         private void JobRunner_JobStarted(object sender, Job e)
@@ -67,7 +114,7 @@ namespace Lidar_UI
                 ICollectionView view = CollectionViewSource.GetDefaultView(jobRunner.jobs);
                 view.Refresh();
                 lstJobs.ItemsSource = jobRunner.jobs;
-                repository.UpdateTile(e.tile);
+                repository.UpdateTile(e.Tile);
             });
         }
 
@@ -87,7 +134,7 @@ namespace Lidar_UI
             JobRunner.water = chkWater.IsChecked ?? false;
             JobRunner.Cleanup = chkCleanup.IsChecked ?? false;
             controls.ForEach(c => c.IsEnabled = false);
-            await jobRunner.RunArea(bounds[0], bounds[1], bounds[2], bounds[3]);
+            await jobRunner.RunArea(bounds[0], bounds[1], bounds[2], bounds[3], (Municipality)cmbMunicipalities.SelectedItem);
 
             controls.ForEach(c => c.IsEnabled = true);
             btnStart.Content = "Start";
@@ -100,7 +147,9 @@ namespace Lidar_UI
             if(dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 txtPath.Text = dialog.SelectedPath;
-                repository.Load(new DirectoryInfo(txtPath.Text));
+                repository.Load(new DirectoryInfo(txtPath.Text), null);
+                Properties.Settings.Default.repositoryPath = dialog.SelectedPath;
+                Properties.Settings.Default.Save();
             }
         }
 
@@ -156,6 +205,19 @@ namespace Lidar_UI
         private void btnPause_Click(object sender, RoutedEventArgs e)
         {
             btnPause.Content = jobRunner.TogglePause();
+        }
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            if (selectedTile != null)
+            {
+                var municipality = repository.Municipalities.municipalities[repository.Municipalities.map[selectedTile.Value]];
+                var mDir = System.IO.Path.Combine(repository.directory.FullName, municipality.Id.ToString());
+                if (Directory.Exists(mDir))
+                {
+                    System.Diagnostics.Process.Start("explorer.exe", mDir);
+                }
+            }
         }
     }
 }

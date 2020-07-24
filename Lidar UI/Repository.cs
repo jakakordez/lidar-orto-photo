@@ -22,7 +22,7 @@ namespace Lidar_UI
 
         public Dictionary<TileId, Tile> Tiles = new Dictionary<TileId, Tile>();
 
-        public Municipalities municipalities = new Municipalities();
+        public Municipalities Municipalities = new Municipalities();
 
         public int Width => Right - Left + 1;
         public int Height => Top - Bottom + 1;
@@ -33,10 +33,15 @@ namespace Lidar_UI
         public DirectoryInfo directory { get; private set; }
         public Dispatcher dispatcher;
 
-        public Repository()
+        public FileStream logFile;
+        System.Windows.Controls.ComboBox cmbMunicipalities;
+
+        public Repository(System.Windows.Controls.ComboBox cmbMunicipalities)
         {
             Wbitmap = new WriteableBitmap(Width, Height, 96, 96, PixelFormats.Rgb24, null);
             pixels1d = new byte[Height * Width * 3];
+            this.cmbMunicipalities = cmbMunicipalities;
+            cmbMunicipalities.ItemsSource = Municipalities.municipalities.Select(m => m.Value).OrderBy(m => m.Name);
         }
 
         internal Tile GenerateTile(TileId id)
@@ -61,13 +66,13 @@ namespace Lidar_UI
         public DirectoryInfo DirectoryForTile(TileId id)
         {
             string path = Path.Combine(directory.FullName,
-                municipalities.map[id].ToString());
+                Municipalities.map[id].ToString());
             return new DirectoryInfo(path);
         }
 
         public void UpdateTile(Tile tile)
         {
-            FillBlock(tile.id.x, tile.id.y, tile.TileColor);
+            FillBlock(tile.Id.X, tile.Id.Y, tile.TileColor);
         }
 
         private void FillBlock(int x, int y, Color c, bool update = true)
@@ -96,12 +101,23 @@ namespace Lidar_UI
             UpdateMap();
         }
 
-        public void Load(DirectoryInfo directory)
+        public void Load(DirectoryInfo directory, Action<double> d)
         {
+            logFile?.Flush();
+            logFile?.Close();
             this.directory = directory;
+            string logFileName = directory.FullName + "/pipeline.log";
+            if (!File.Exists(logFileName)) File.Create(logFileName);
+            logFile = new FileStream(logFileName, FileMode.Append);
+            logFile.Write(new byte[] { 0x31, 0x32, 0x33 }, 0, 3);
+            logFile.Flush();
+
             ResetMap();
-            foreach (var municipalityDir in directory.GetDirectories())
+            var municipalityDirs = directory.GetDirectories();
+            int i = 0;
+            foreach (var municipalityDir in municipalityDirs)
             {
+                d?.Invoke((double)(++i) / municipalityDirs.Length);
                 foreach (var file in municipalityDir.GetFiles())
                 {
                     if (file.FullName.EndsWith(".laz"))
@@ -113,7 +129,7 @@ namespace Lidar_UI
                             TileId id = new TileId(file.Name);
                             if (Tiles.ContainsKey(id)) Tiles[id].AddFile(file);
                             else Tiles[id] = new Tile(file);
-                            FillBlock(id.x, id.y, Tiles[id].TileColor);
+                            FillBlock(id.X, id.Y, Tiles[id].TileColor);
                         }
                         catch { }
                     }

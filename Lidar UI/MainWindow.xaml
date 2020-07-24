@@ -5,35 +5,48 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Lidar_UI"
         mc:Ignorable="d"
-        Title="MainWindow" Height="600" Width="800" Closing="Window_Closing">
+        Title="MainWindow" Height="1000" Width="1000" Closing="Window_Closing" Loaded="Window_Loaded">
     <Grid>
-        <local:MapView x:Name="mapView" Margin="515,59,10,10"/>
-        <Button x:Name="btnStart" Content="Start" HorizontalAlignment="Left" Height="24" Margin="145,3,0,0" VerticalAlignment="Top" Width="75" Click="BtnStart_Click"/>
-        <Button x:Name="btnPause" Content="Pause" HorizontalAlignment="Left" Height="24" Margin="145,30,0,0" VerticalAlignment="Top" Width="75" Click="btnPause_Click"/>
-        <TextBox x:Name="txtPath" Height="23" Margin="305,31,10,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top"/>
-        <ListView x:Name="lstJobs" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,59,0,0" Height="400" Width="500" SelectionChanged="lstJobs_SelectionChanged" >
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="589*"/>
+            <ColumnDefinition Width="204*"/>
+        </Grid.ColumnDefinitions>
+        <local:MapView x:Name="mapView" Margin="515,59,10,10" Grid.ColumnSpan="2"/>
+        <Button x:Name="btnStart" Content="Start" HorizontalAlignment="Left" Height="24" Margin="150,30,0,0" VerticalAlignment="Top" Width="75" Click="BtnStart_Click"/>
+        <Button x:Name="btnPause" Content="Pause" HorizontalAlignment="Left" Height="24" Margin="245,30,0,0" VerticalAlignment="Top" Width="75" Click="btnPause_Click"/>
+        <TextBox x:Name="txtPath" Height="23" Margin="405,31,10,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
+        <ListView x:Name="lstJobs" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,59,0,0" Height="795" Width="500" SelectionChanged="lstJobs_SelectionChanged" >
             <ListView.View>
                 <GridView>
+                    <GridViewColumn Width="27"  >
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock x:Name="Txt" Text="{Binding StatusString}" Foreground="{Binding StatusColor}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
                     <GridViewColumn Header="Task" Width="80" DisplayMemberBinding="{Binding TaskName}" />
                     <GridViewColumn Header="Started" Width="130" DisplayMemberBinding="{Binding StartedString}" />
                     <GridViewColumn Header="Finished" Width="130" DisplayMemberBinding="{Binding FinishedString}" />
                     <GridViewColumn Header="Tile" Width="70" DisplayMemberBinding="{Binding TileString}" />
-                    <GridViewColumn Header="Status" Width="70" DisplayMemberBinding="{Binding StatusString}" />
                 </GridView>
             </ListView.View>
         </ListView>
-        <TextBox x:Name="lstOutput" HorizontalAlignment="Left" Margin="10,469,0,10" Width="500" IsReadOnly="True" />
+        <TextBox x:Name="lstOutput" HorizontalAlignment="Left" Margin="10,859,0,10" Width="500" IsReadOnly="True" />
 
-        <Button x:Name="btnFolder" Content="..." HorizontalAlignment="Left" Margin="225,31,0,0" VerticalAlignment="Top" Width="75" Height="23" Click="btnFolder_Click"/>
+        <Button x:Name="btnFolder" Content="..." HorizontalAlignment="Left" Margin="325,31,0,0" VerticalAlignment="Top" Width="75" Height="23" Click="btnFolder_Click"/>
         <TextBox x:Name="txtLeft" HorizontalAlignment="Left" Height="23" Margin="10,16,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="40" TextChanged="TextChanged"/>
         <TextBox x:Name="txtBottom" HorizontalAlignment="Left" Height="23" Margin="55,31,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="40" TextChanged="TextChanged"/>
         <TextBox x:Name="txtRight" HorizontalAlignment="Left" Height="23" Margin="100,16,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="40" TextChanged="TextChanged"/>
         <TextBox x:Name="txtTop" HorizontalAlignment="Left" Height="23" Margin="55,3,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="40" TextChanged="TextChanged"/>
-        <Button Content="Municipalities" HorizontalAlignment="Left" VerticalAlignment="Top" Width="96" Margin="225,6,0,0" Click="Button_Click"/>
-        <CheckBox x:Name="chkDownload" IsChecked="True"  Content="Download" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="326,9,0,0"/>
-        <CheckBox x:Name="chkWater" IsChecked="True" Content="Water" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="426,9,0,0"/>
-        <CheckBox x:Name="chkColor" IsChecked="True" Content="Color" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="506,9,0,0"/>
-        <CheckBox x:Name="chkNormals" IsChecked="True" Content="Normals" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="586,9,0,0"/>
-        <CheckBox x:Name="chkCleanup" IsChecked="False" Content="Cleanup" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="686,9,0,0"/>
+        <Button Content="Municipalities" HorizontalAlignment="Left" VerticalAlignment="Top" Width="96" Margin="325,6,0,0" Click="Button_Click"/>
+        <CheckBox x:Name="chkDownload" IsChecked="True"  Content="Download" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="426,9,0,0"/>
+        <CheckBox x:Name="chkWater" IsChecked="True" Content="Water" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="506,9,0,0"/>
+        <CheckBox x:Name="chkColor" IsChecked="True" Content="Color" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="566,9,0,0" Grid.ColumnSpan="2"/>
+        <CheckBox x:Name="chkNormals" IsChecked="True" Content="Normals" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="620,9,0,0"/>
+        <CheckBox x:Name="chkCleanup" IsChecked="False" Content="Cleanup" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="690,9,0,0" Grid.ColumnSpan="2"/>
+        <ComboBox x:Name="cmbMunicipalities" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="150, 5, 0, 0" Width="170"/>
+        <Label x:Name="lblTile" Content="--" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="82.366,3,0,0" Grid.Column="1" />
+        <Button Content="Open" Grid.Column="1" HorizontalAlignment="Left" Margin="27.366,6,0,0" VerticalAlignment="Top" Width="50" Click="Button_Click_1"/>
     </Grid>
 </Window>

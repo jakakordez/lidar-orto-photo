@@ -22,7 +22,7 @@ namespace Lidar_UI.Jobs
         {
             Process p = new Process();
             p.StartInfo.FileName = "WaterWorker/WaterWorker.exe";
-            p.StartInfo.Arguments = "\"" + StartFile.Directory + "\" " + t.id.x + " " + t.id.y;
+            p.StartInfo.Arguments = "\"" + StartFile.Directory + "\" " + t.Id.X + " " + t.Id.Y;
             p.StartInfo.WorkingDirectory = "./WaterWorker/";
             return p;
         }

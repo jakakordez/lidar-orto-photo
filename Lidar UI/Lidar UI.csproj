@@ -8,7 +8,7 @@
     <OutputType>WinExe</OutputType>
     <RootNamespace>Lidar_UI</RootNamespace>
     <AssemblyName>Lidar UI</AssemblyName>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
@@ -78,6 +78,9 @@
     <Compile Include="Jobs\Job.cs" />
     <Compile Include="Jobs\NormalJob.cs" />
     <Compile Include="Jobs\WaterJob.cs" />
+    <Compile Include="LoadingWindow.xaml.cs">
+      <DependentUpon>LoadingWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Municipalities.cs" />
     <Compile Include="MunicipalitiesView.xaml.cs">
       <DependentUpon>MunicipalitiesView.xaml</DependentUpon>
@@ -85,6 +88,10 @@
     <Compile Include="Municipality.cs" />
     <Compile Include="Repository.cs" />
     <Compile Include="Tile.cs" />
+    <Page Include="LoadingWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -135,12 +142,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\lidar-orto-photo\lidar-orto-photo.csproj">
-      <Project>{078d977d-6e85-4802-8669-855907bb5e96}</Project>
-      <Name>lidar-orto-photo</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

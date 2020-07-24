@@ -10,7 +10,7 @@
         <Image x:Name="imgMap" 
                Stretch="Uniform" 
                RenderOptions.BitmapScalingMode="NearestNeighbor"
-                RenderOptions.EdgeMode="Aliased" MouseMove="imgMap_MouseMove">
+                RenderOptions.EdgeMode="Aliased" MouseMove="imgMap_MouseMove" MouseUp="imgMap_MouseUp" >
             <Image.ToolTip>
             <ToolTip>Map</ToolTip>
             </Image.ToolTip>

@@ -30,10 +30,10 @@ namespace Lidar_UI
             Wbitmap = new WriteableBitmap(repository.Width, repository.Height, 96, 96, PixelFormats.Rgb24, null);
             pixels1d = new byte[repository.Height * repository.Width * 3];
 
-            foreach (var item in repository.municipalities.map)
+            foreach (var item in repository.Municipalities.map)
             {
-                Municipality m = repository.municipalities.municipalities[item.Value];
-                FillBlock(item.Key.x, item.Key.y, m.Color);
+                Municipality m = repository.Municipalities.municipalities[item.Value];
+                FillBlock(item.Key.X, item.Key.Y, m.Color);
             }
 
             Int32Rect rect = new Int32Rect(0, 0, repository.Width, repository.Height);

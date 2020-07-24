@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DotSpatial.Topology;
 using Supercluster.KDTree;
 using Xunit;
 
@@ -71,6 +72,28 @@ namespace WaterWorker
             {
                 double x = point.First.ToObject<double>();
                 double y = point.Last.ToObject<double>();
+                if (x > Right) Right = x;
+                if (x < Left) Left = x;
+                if (y > Top) Top = y;
+                if (y < Bottom) Bottom = y;
+                Points.Add(new XYZ() { x = x, y = y });
+            }
+            segments = new List<Segment>();
+            for (int i = 0; i < Points.Count; i++)
+            {
+                var p1 = Points[i];
+                var p2 = Points[(i + 1) % Points.Count];
+                segments.Add(new Segment(p1, p2));
+            }
+        }
+
+        public Ring(ILinearRing ring)
+        {
+            Points = new List<XYZ>();
+            foreach (var point in ring.Coordinates)
+            {
+                double x = point.X;
+                double y = point.Y;
                 if (x > Right) Right = x;
                 if (x < Left) Left = x;
                 if (y > Top) Top = y;

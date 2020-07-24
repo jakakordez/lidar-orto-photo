@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 
 namespace WaterWorker
 {
-    class Polygon
+    class Polygon:IPolygon
     {
         string geographical_name;
         public List<Ring> rings;
         int id;
-        public Dictionary<int, XYZ> points = new Dictionary<int, XYZ>();
-        public Dictionary<int, XYZ> allPoints = new Dictionary<int, XYZ>();
+        public Dictionary<int, XYZ> points { get; set; } = new Dictionary<int, XYZ>();
+        public Dictionary<int, XYZ> allPoints { get; set; } = new Dictionary<int, XYZ>();
 
 
         public override string ToString()
@@ -33,6 +33,16 @@ namespace WaterWorker
             }
         }
 
+        public Polygon(DotSpatial.Topology.Polygon polygon)
+        {
+            rings = new List<Ring>();
+            rings.Add(new Ring(polygon.Shell));
+            foreach (var hole in polygon.Holes)
+            {
+                rings.Add(new Ring(hole));
+            }
+        }
+
         public bool InPolygon(XYZ point)
         {
             if (point.x > Right || point.x < Left || point.y > Top || point.y < Bottom) return false;
@@ -40,7 +50,9 @@ namespace WaterWorker
             return intersections % 2 == 1;
         }
 
-        public KDTree<double, XYZ> ringsTree;
+        public KDTree<double, XYZ> ringsTree { get; set; }
+
+        public IEnumerable<XYZ> ringPoints => rings.SelectMany(r => r.Points);
 
         public double Top => rings.Max(r => r.Top);
         public double Bottom => rings.Min(r => r.Bottom);
@@ -66,7 +78,7 @@ namespace WaterWorker
             ringsTree = new KDTree<double, XYZ>(2, treeData, rings.SelectMany(r => r.Points).ToArray(), Loader.L2Norm);
         }
 
-        internal double DistanceFromCoast(XYZ point)
+        public double DistanceFromCoast(XYZ point)
         {
             return rings.Select(r => r.DistanceFromCoast(point)).Min();
         }

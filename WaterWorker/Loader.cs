@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using Supercluster.KDTree;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -24,20 +25,23 @@ namespace WaterWorker
             ResourceDirectoryPath = resourceDirectory;
         }
 
-        List<Polygon> polygons;
+        List<IPolygon> polygons;
 
         string sourcePath => ResourceDirectoryPath + "/3-" + x + "-" + y + ".laz";
         string destPath => ResourceDirectoryPath + "/4-" + x + "-" + y + ".laz";
 
         public void Start()
         {
-            LoadJson();
-            if(polygons.Count == 0)
+            MapLayer mapLayer = new MapLayer(@".\hidrografija_D48");
+            polygons = mapLayer.GetIPolygons(x, y);
+            //LoadJson();
+            if (polygons.Count == 0)
             {
                 Console.WriteLine("[{0:hh:mm:ss}] No water on this tile", DateTime.Now);
                 System.IO.File.Copy(sourcePath, destPath);
                 return;
             }
+            else Console.WriteLine("[{0:hh:mm:ss}] Total water points: {1}", DateTime.Now, polygons.Sum(p => p.ringPoints.Count()));
             LoadPointcloud();
             WritePointcloud();
         }
@@ -115,6 +119,11 @@ namespace WaterWorker
 
             Console.WriteLine("[{0:hh:mm:ss}] Total: {1} mio points", DateTime.Now, Math.Round(numberOfPoints/1000000.0, 2));
 
+            /*foreach (var item in polygons)
+            {
+                Console.WriteLine(GetGeogebraString(item.ringPoints.ToList()));
+            }*/
+
             for (var pointIndex = 0; pointIndex < numberOfPoints; pointIndex++)
             {
                 if(pointIndex%1000000 == 0 && pointIndex > 0)
@@ -137,6 +146,11 @@ namespace WaterWorker
                     }
                 }
             }
+            /*
+            foreach (var item in polygons)
+            {
+                Console.WriteLine(GetGeogebraString(Subsample(item.allPoints.Values.ToList(), 10)));
+            }*/
 
             foreach (var polygon in polygons.Where(p => p.allPoints.Count > 0))
             {
@@ -169,9 +183,7 @@ namespace WaterWorker
             }
             var ringPoints = polygons
                 .Where(p => p.allPoints.Count > 0)
-                .SelectMany(p => p.rings)
-                .SelectMany(r => r.Points)
-                .ToArray();
+                .SelectMany(p => p.ringPoints);
             if (ringPoints.Count() > 0)
             {
                 foreach (var polygon in polygons.Where(p => p.allPoints.Count == 0))
@@ -181,14 +193,40 @@ namespace WaterWorker
             }
             else
             {
-                throw new Exception("No points to determine ring heights!");
+                //throw new Exception("No points to determine ring heights!");
+                Console.WriteLine("No points to determine ring heights");
+                System.IO.File.Copy(sourcePath, destPath);
+                System.Environment.Exit(0);
             }
+        }
+
+        public static IEnumerable<XYZ> Subsample(IList<XYZ> points, int n)
+        {
+            return points
+                .Select((a, b) => new KeyValuePair<int, XYZ>(b, a))
+                .Where(a => a.Key % n == 0)
+                .Select(a => a.Value);
+        }
+
+        public static string GetGeogebraString(IEnumerable<XYZ> points)
+        {
+            StringBuilder b = new StringBuilder();
+            b.Append("{");
+            bool first = true;
+            foreach (var item in points)
+            {
+                if (!first) b.Append(",");
+                first = false;
+                b.AppendFormat(CultureInfo.InvariantCulture, "({0:0.0}, {1:0.0})", item.x, item.y);
+            }
+            b.Append("}");
+            return b.ToString();
         }
 
         void LoadJson()
         {
             Console.WriteLine("[{0:hh:mm:ss}] Loading JSON", DateTime.Now);
-            polygons = new List<Polygon>();
+            polygons = new List<IPolygon>();
             string url = BuildUrl(x * 1000, y * 1000, (x + 1) * 1000, (y + 1) * 1000);
             WebClient client = new WebClient();
             var data = Encoding.UTF8.GetString(client.DownloadData(url));

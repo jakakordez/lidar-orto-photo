@@ -39,7 +39,7 @@ namespace DownloadWorker
             var start = new ProcessStartInfo
             {
                 Arguments = "-i \"" 
-                            + ResourceDirectoryPath + "/_2-" + x + "-" + y + ".laz\" -set_point_type 5 -set_version 1.3 -o \"" 
+                            + ResourceDirectoryPath + "/_2-" + x + "-" + y + ".laz\" -set_point_type 2 -set_version 1.3 -o \"" 
                           + ResourceDirectoryPath + "/2-" + x + "-" + y + ".laz\"", // point type 3
                 FileName = "las2las.exe",
                 WindowStyle = ProcessWindowStyle.Hidden,

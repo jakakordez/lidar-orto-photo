@@ -1,0 +1,134 @@
+{
+	"mapName": "DOF_2016",
+	"imageUrl": "http://gis.arso.gov.si/arcgis/rest/services/DOF_2016/MapServer/tile/{level}/{row}/{column}",
+	"cachePath": "{map-dir}\\{level}\\{row}\\{column}.jpg",
+	"tileInfo": {
+		"rows": 256,
+		"cols": 256,
+		"format": "JPEG",
+		"origin": {
+			"x": 345000,
+			"y": 215000
+		},
+		"lods": [{
+				"level": 0,
+				"resolution": 1322.9193125052918,
+				"scale": 5000000,
+				"startTile": [0, 0],
+				"endTile": [0, 0]
+			},
+			{
+				"level": 1,
+				"resolution": 661.4596562526459,
+				"scale": 2500000,
+				"startTile": [0, 0],
+				"endTile": [1, 1]
+			},
+			{
+				"level": 2,
+				"resolution": 396.87579375158754,
+				"scale": 1500000,
+				"startTile": [0, 0],
+				"endTile": [1, 2]
+			},
+			{
+				"level": 3,
+				"resolution": 264.5838625010584,
+				"scale": 1000000,
+				"startTile": [0, 0],
+				"endTile": [2, 4]
+			},
+			{
+				"level": 4,
+				"resolution": 198.43789687579377,
+				"scale": 750000,
+				"startTile": [0, 0],
+				"endTile": [3, 5]
+			},
+			{
+				"level": 5,
+				"resolution": 132.2919312505292,
+				"scale": 500000,
+				"startTile": [0, 0],
+				"endTile": [5, 8]
+			},
+			{
+				"level": 6,
+				"resolution": 66.1459656252646,
+				"scale": 250000,
+				"startTile": [1, 1],
+				"endTile": [10, 16]
+			},
+			{
+				"level": 7,
+				"resolution": 39.687579375158755,
+				"scale": 150000,
+				"startTile": [1, 2],
+				"endTile": [18, 27]
+			},
+			{
+				"level": 8,
+				"resolution": 26.458386250105836,
+				"scale": 100000,
+				"startTile": [2, 4],
+				"endTile": [27, 41]
+			},
+			{
+				"level": 9,
+				"resolution": 19.843789687579378,
+				"scale": 75000,
+				"startTile": [3, 5],
+				"endTile": [36, 55]
+			},
+			{
+				"level": 10,
+				"resolution": 13.229193125052918,
+				"scale": 50000,
+				"startTile": [5, 8],
+				"endTile": [54, 83]
+			},
+			{
+				"level": 11,
+				"resolution": 6.614596562526459,
+				"scale": 25000,
+				"startTile": [11, 17],
+				"endTile": [108, 166]
+			},
+			{
+				"level": 12,
+				"resolution": 3.9687579375158752,
+				"scale": 15000,
+				"startTile": [19, 28],
+				"endTile": [181, 276]
+			},
+			{
+				"level": 13,
+				"resolution": 2.6458386250105836,
+				"scale": 10000,
+				"startTile": [28, 43],
+				"endTile": [272, 415]
+			},
+			{
+				"level": 14,
+				"resolution": 1.3229193125052918,
+				"scale": 5000,
+				"startTile": [57, 86],
+				"endTile": [544, 830]
+			},
+			{
+				"level": 15,
+				"resolution": 0.6614596562526459,
+				"scale": 2500,
+				"startTile": [115, 173],
+				"endTile": [1089, 1661]
+			},
+			{
+				"level": 16,
+				"resolution": 0.26458386250105836,
+				"scale": 1000,
+				"startTile": [287, 433],
+				"endTile": [2723, 4154]
+			}
+		]
+	}
+}

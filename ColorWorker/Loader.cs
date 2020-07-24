@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Net;
+using System.Text;
 using laszip.net;
 using Point = System.Windows.Point;
 
@@ -42,6 +44,8 @@ namespace ColorWorker
                 }
                 catch (Exception e){
                     Console.WriteLine("[{0:hh:mm:ss}] Image download failed...", DateTime.Now);
+                    Console.WriteLine("[{0:hh:mm:ss}] {1}", DateTime.Now, e.Message);
+                    Console.WriteLine(e.StackTrace);
                 }
             }
             if (img == null) throw new Exception();
@@ -155,16 +159,51 @@ namespace ColorWorker
             myWebClient.DownloadFile(remoteUri, fileName);
 
             return (Bitmap)Image.FromFile(fileName);*/
-            
-            var request = WebRequest.CreateHttp("http://gis.arso.gov.si/arcgis/rest/services/DOF_2016/MapServer/export" +
+
+            /*var request = WebRequest.CreateHttp("http://gis.arso.gov.si/arcgis/rest/services/DOF_2016/MapServer/export" +
                                                 $"?bbox={minX}%2C{minY}%2C{maxX}%2C{maxY}&bboxSR=&layers=&layerDefs=" +
                                                 $"&size={OrtoPhotoImgSize}%2C{OrtoPhotoImgSize}&imageSR=&format=png" +
                                                 "&transparent=false&dpi=&time=&layerTimeOptions=" +
                                                 "&dynamicLayers=&gdbVersion=&mapScale=&f=image");
             WebResponse response = request.GetResponse();
-            Stream responseStream = response.GetResponseStream();
+            Stream responseStream = response.GetResponseStream();*/
+
+            var sb = new StringBuilder();
+            sb.Append("./Python/map_exporter.py --bbox-format=gk -o ");
+            sb.Append(filename);
+            sb.Append(" -f png --width 2000 --height 2000 ");
+            sb.Append(5000000 + minY);
+            sb.Append(" ");
+            sb.Append(5000000 + minX);
+            sb.Append(" ");
+            sb.Append(5000000 + maxY);
+            sb.Append(" ");
+            sb.Append(5000000 + maxX);
+            sb.Append(" --map-dir=Maps --map-conf ./Python/dof_2016.json --verbose");
+            
+            Process process = new Process();
+            var username = Environment.UserName;
+            process.StartInfo.FileName = @"C:\Users\"+username+@"\Miniconda3\python.exe";
+            Console.WriteLine("Python interpreter: " + process.StartInfo.FileName);
+            process.StartInfo.Arguments = sb.ToString();
+            Console.WriteLine("Command: " + sb.ToString());
+            process.StartInfo.WorkingDirectory = System.Environment.CurrentDirectory;
+            process.StartInfo.UseShellExecute = false;
+            process.StartInfo.RedirectStandardError = true;
+            process.StartInfo.RedirectStandardOutput = true;
+            process.OutputDataReceived += (sender, args) => Console.WriteLine(args.Data);
+
+            process.Start();
+            process.BeginOutputReadLine();
+            while (!process.WaitForExit(1))
+            {
+
+            }
+            //Console.WriteLine(process.ExitCode);
+            //Console.WriteLine(process.StandardOutput.ReadToEnd());
             //Console.WriteLine("[DONE]");
-            return new Bitmap(responseStream?? throw new Exception());
+            //return new Bitmap(responseStream?? throw new Exception());
+            return new Bitmap(Bitmap.FromFile(filename));
         }
     }
 }
